@@ -6,8 +6,10 @@ import { CSVImport } from '@/components/CSVImport';
 import { ExpenseCategorization } from '@/components/ExpenseCategorization';
 import { Dashboard } from '@/components/Dashboard';
 import { useFinanceStore } from '@/hooks/useFinanceStore';
+import { useCategoryStore } from '@/hooks/useCategoryStore';
 import { generatePDFReport } from '@/lib/pdfExport';
 import { toast } from '@/hooks/use-toast';
+import { useApp } from '@/contexts/AppContext';
 
 const STEPS = [
   { id: 1, label: 'Income' },
@@ -17,6 +19,7 @@ const STEPS = [
 ];
 
 const Index = () => {
+  const { language } = useApp();
   const [currentStep, setCurrentStep] = useState(1);
   const {
     incomes,
@@ -27,19 +30,35 @@ const Index = () => {
     addExpenses,
     updateExpenseCategory,
     removeExpense,
+    clearAllExpenses,
   } = useFinanceStore();
+
+  const {
+    categories,
+    incomeTypes,
+    addCategory,
+    removeCategory,
+    addIncomeType,
+    removeIncomeType,
+    isDefaultCategory,
+    isDefaultIncomeType,
+  } = useCategoryStore();
 
   const handleExportPDF = () => {
     try {
       generatePDFReport(summary, incomes, expenses);
       toast({
-        title: "Report Exported",
-        description: "Your monthly report has been downloaded as PDF.",
+        title: language === 'pt' ? "Relatório Exportado" : "Report Exported",
+        description: language === 'pt' 
+          ? "Seu relatório mensal foi baixado como PDF." 
+          : "Your monthly report has been downloaded as PDF.",
       });
     } catch (error) {
       toast({
-        title: "Export Failed",
-        description: "There was an error generating the PDF.",
+        title: language === 'pt' ? "Exportação Falhou" : "Export Failed",
+        description: language === 'pt' 
+          ? "Houve um erro ao gerar o PDF." 
+          : "There was an error generating the PDF.",
         variant: "destructive",
       });
     }
@@ -51,6 +70,7 @@ const Index = () => {
         return (
           <IncomeForm
             incomes={incomes}
+            incomeTypes={incomeTypes}
             onAddIncome={addIncome}
             onRemoveIncome={removeIncome}
             onNext={() => setCurrentStep(2)}
@@ -59,16 +79,20 @@ const Index = () => {
       case 2:
         return (
           <CSVImport
+            categories={categories}
             onImport={addExpenses}
             onNext={() => setCurrentStep(3)}
             onBack={() => setCurrentStep(1)}
             hasExpenses={expenses.length > 0}
+            onClearExpenses={clearAllExpenses}
+            expenseCount={expenses.length}
           />
         );
       case 3:
         return (
           <ExpenseCategorization
             expenses={expenses}
+            categories={categories}
             onUpdateCategory={updateExpenseCategory}
             onRemoveExpense={removeExpense}
             onNext={() => setCurrentStep(4)}
@@ -90,7 +114,16 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header
+        categories={categories}
+        incomeTypes={incomeTypes}
+        onAddCategory={addCategory}
+        onRemoveCategory={removeCategory}
+        onAddIncomeType={addIncomeType}
+        onRemoveIncomeType={removeIncomeType}
+        isDefaultCategory={isDefaultCategory}
+        isDefaultIncomeType={isDefaultIncomeType}
+      />
       <main className="container mx-auto px-4 py-6 max-w-5xl">
         <StepIndicator
           steps={STEPS}

@@ -1,5 +1,6 @@
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useApp } from '@/contexts/AppContext';
 
 interface Step {
   id: number;
@@ -13,6 +14,14 @@ interface StepIndicatorProps {
 }
 
 export function StepIndicator({ steps, currentStep, onStepClick }: StepIndicatorProps) {
+  const { t } = useApp();
+
+  const getTranslatedLabel = (label: string) => {
+    const key = `steps.${label.toLowerCase()}`;
+    const translated = t(key);
+    return translated !== key ? translated : label;
+  };
+
   return (
     <div className="flex items-center justify-center gap-2 md:gap-4 py-6 overflow-x-auto">
       {steps.map((step, index) => (
@@ -44,7 +53,9 @@ export function StepIndicator({ steps, currentStep, onStepClick }: StepIndicator
                 step.id
               )}
             </div>
-            <span className="text-sm font-medium hidden sm:inline">{step.label}</span>
+            <span className="text-sm font-medium hidden sm:inline">
+              {getTranslatedLabel(step.label)}
+            </span>
           </button>
           {index < steps.length - 1 && (
             <div
