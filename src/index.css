@@ -94,6 +94,58 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  /* High Contrast Mode */
+  .high-contrast {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 60 100% 50%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 70%;
+
+    --accent: 60 100% 50%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 40%;
+    --input: 0 0% 15%;
+    --ring: 60 100% 50%;
+
+    /* High contrast semantic colors */
+    --income: 120 100% 40%;
+    --income-foreground: 0 0% 0%;
+    --expense: 0 100% 50%;
+    --expense-foreground: 0 0% 100%;
+    --investment: 60 100% 50%;
+    --investment-foreground: 0 0% 0%;
+
+    /* Shadows - more pronounced in high contrast */
+    --shadow-sm: 0 2px 8px -2px hsl(0 0% 0% / 0.8);
+    --shadow-md: 0 8px 24px -4px hsl(0 0% 0% / 0.9);
+    --shadow-glow: 0 0 30px -5px hsl(60 100% 50% / 0.5);
+  }
+
+  .high-contrast * {
+    border-color: hsl(var(--border)) !important;
+  }
+
+  .high-contrast .text-muted-foreground {
+    color: hsl(0 0% 80%) !important;
+  }
 }
 
 @layer base {

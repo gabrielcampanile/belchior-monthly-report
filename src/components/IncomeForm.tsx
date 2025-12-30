@@ -5,18 +5,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { IncomeEntry, IncomeType, INCOME_TYPES } from '@/types/finance';
+import { IncomeEntry } from '@/types/finance';
+import { useApp } from '@/contexts/AppContext';
+import { formatCurrency } from '@/lib/currencyParser';
 
 interface IncomeFormProps {
   incomes: IncomeEntry[];
+  incomeTypes: string[];
   onAddIncome: (income: Omit<IncomeEntry, 'id'>) => void;
   onRemoveIncome: (id: string) => void;
   onNext: () => void;
 }
 
-export function IncomeForm({ incomes, onAddIncome, onRemoveIncome, onNext }: IncomeFormProps) {
+export function IncomeForm({ incomes, incomeTypes, onAddIncome, onRemoveIncome, onNext }: IncomeFormProps) {
+  const { language, t } = useApp();
   const [source, setSource] = useState('');
-  const [type, setType] = useState<IncomeType>('Salary');
+  const [type, setType] = useState<string>(incomeTypes[0] || 'Salary');
   const [amount, setAmount] = useState('');
 
   const totalIncome = incomes.reduce((sum, i) => sum + i.amount, 0);
@@ -27,7 +31,7 @@ export function IncomeForm({ incomes, onAddIncome, onRemoveIncome, onNext }: Inc
 
     onAddIncome({
       source: source.trim(),
-      type,
+      type: type as any,
       amount: parseFloat(amount),
     });
 
@@ -35,18 +39,17 @@ export function IncomeForm({ incomes, onAddIncome, onRemoveIncome, onNext }: Inc
     setAmount('');
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
+  const getTranslatedType = (incomeType: string) => {
+    const key = `incomeType.${incomeType}`;
+    const translated = t(key);
+    return translated !== key ? translated : incomeType;
   };
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-foreground mb-2">Add Your Income</h2>
-        <p className="text-muted-foreground">Enter all income sources for this month</p>
+        <h2 className="text-2xl font-bold text-foreground mb-2">{t('income.title')}</h2>
+        <p className="text-muted-foreground">{t('income.subtitle')}</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -55,17 +58,17 @@ export function IncomeForm({ incomes, onAddIncome, onRemoveIncome, onNext }: Inc
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-income">
               <Plus className="w-5 h-5" />
-              New Income Entry
+              {t('income.newEntry')}
             </CardTitle>
-            <CardDescription>Add a new income source</CardDescription>
+            <CardDescription>{t('income.addNew')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="source">Income Source</Label>
+                <Label htmlFor="source">{t('income.source')}</Label>
                 <Input
                   id="source"
-                  placeholder="e.g., Company Name, Client Project..."
+                  placeholder={t('income.sourcePlaceholder')}
                   value={source}
                   onChange={(e) => setSource(e.target.value)}
                   className="bg-secondary border-border"
@@ -73,15 +76,15 @@ export function IncomeForm({ incomes, onAddIncome, onRemoveIncome, onNext }: Inc
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="type">Income Type</Label>
-                <Select value={type} onValueChange={(v) => setType(v as IncomeType)}>
+                <Label htmlFor="type">{t('income.type')}</Label>
+                <Select value={type} onValueChange={setType}>
                   <SelectTrigger className="bg-secondary border-border">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-popover border-border">
-                    {INCOME_TYPES.map((t) => (
+                    {incomeTypes.map((t) => (
                       <SelectItem key={t} value={t}>
-                        {t}
+                        {getTranslatedType(t)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -89,9 +92,11 @@ export function IncomeForm({ incomes, onAddIncome, onRemoveIncome, onNext }: Inc
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount</Label>
+                <Label htmlFor="amount">{t('income.amount')}</Label>
                 <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                    {language === 'pt' ? 'R$' : '$'}
+                  </span>
                   <Input
                     id="amount"
                     type="number"
@@ -107,7 +112,7 @@ export function IncomeForm({ incomes, onAddIncome, onRemoveIncome, onNext }: Inc
 
               <Button type="submit" variant="income" className="w-full">
                 <Plus className="w-4 h-4" />
-                Add Income
+                {t('income.addButton')}
               </Button>
             </form>
           </CardContent>
@@ -118,11 +123,11 @@ export function IncomeForm({ incomes, onAddIncome, onRemoveIncome, onNext }: Inc
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Briefcase className="w-5 h-5 text-muted-foreground" />
-              Income Entries
+              {t('income.entries')}
             </CardTitle>
             <CardDescription>
               {incomes.length === 0 
-                ? 'No income entries yet' 
+                ? t('income.noEntries')
                 : `${incomes.length} ${incomes.length === 1 ? 'entry' : 'entries'}`}
             </CardDescription>
           </CardHeader>
@@ -131,7 +136,7 @@ export function IncomeForm({ incomes, onAddIncome, onRemoveIncome, onNext }: Inc
               {incomes.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <DollarSign className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                  <p>Add your first income entry</p>
+                  <p>{t('income.addFirst')}</p>
                 </div>
               ) : (
                 incomes.map((income) => (
@@ -141,11 +146,11 @@ export function IncomeForm({ incomes, onAddIncome, onRemoveIncome, onNext }: Inc
                   >
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-foreground truncate">{income.source}</p>
-                      <p className="text-xs text-muted-foreground">{income.type}</p>
+                      <p className="text-xs text-muted-foreground">{getTranslatedType(income.type)}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="font-mono font-semibold text-income">
-                        {formatCurrency(income.amount)}
+                        {formatCurrency(income.amount, language)}
                       </span>
                       <Button
                         variant="ghost"
@@ -164,9 +169,9 @@ export function IncomeForm({ incomes, onAddIncome, onRemoveIncome, onNext }: Inc
             {incomes.length > 0 && (
               <div className="mt-4 pt-4 border-t border-border">
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Total Income</span>
+                  <span className="text-muted-foreground">{t('income.total')}</span>
                   <span className="text-xl font-bold font-mono text-income">
-                    {formatCurrency(totalIncome)}
+                    {formatCurrency(totalIncome, language)}
                   </span>
                 </div>
               </div>
@@ -178,7 +183,7 @@ export function IncomeForm({ incomes, onAddIncome, onRemoveIncome, onNext }: Inc
       <div className="flex justify-end pt-4">
         <Button onClick={onNext} size="lg" disabled={incomes.length === 0}>
           <TrendingUp className="w-4 h-4" />
-          Continue to Expenses
+          {t('income.continue')}
         </Button>
       </div>
     </div>

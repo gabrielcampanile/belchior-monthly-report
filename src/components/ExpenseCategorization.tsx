@@ -1,12 +1,15 @@
-import { Trash2, Tag, ArrowRight, BarChart3 } from 'lucide-react';
+import { Trash2, Tag, ArrowRight, BarChart3, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ExpenseEntry, ExpenseCategory, EXPENSE_CATEGORIES, CATEGORY_COLORS } from '@/types/finance';
+import { ExpenseEntry, CATEGORY_COLORS, ExpenseCategory } from '@/types/finance';
+import { useApp } from '@/contexts/AppContext';
+import { formatCurrency } from '@/lib/currencyParser';
 
 interface ExpenseCategorizationProps {
   expenses: ExpenseEntry[];
-  onUpdateCategory: (id: string, category: ExpenseCategory) => void;
+  categories: string[];
+  onUpdateCategory: (id: string, category: string) => void;
   onRemoveExpense: (id: string) => void;
   onNext: () => void;
   onBack: () => void;
@@ -14,28 +17,31 @@ interface ExpenseCategorizationProps {
 
 export function ExpenseCategorization({
   expenses,
+  categories,
   onUpdateCategory,
   onRemoveExpense,
   onNext,
   onBack,
 }: ExpenseCategorizationProps) {
+  const { language, t } = useApp();
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const categorizedCount = expenses.filter(e => e.category !== 'Other').length;
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
+  const getTranslatedCategory = (category: string) => {
+    const key = `category.${category}`;
+    const translated = t(key);
+    return translated !== key ? translated : category;
+  };
+
+  const getCategoryColor = (category: string) => {
+    return CATEGORY_COLORS[category as ExpenseCategory] || '#6b7280';
   };
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-foreground mb-2">Categorize Expenses</h2>
-        <p className="text-muted-foreground">
-          Assign a category to each expense for better insights
-        </p>
+        <h2 className="text-2xl font-bold text-foreground mb-2">{t('categorize.title')}</h2>
+        <p className="text-muted-foreground">{t('categorize.subtitle')}</p>
       </div>
 
       {/* Stats Bar */}
@@ -43,9 +49,9 @@ export function ExpenseCategorization({
         <Card className="border-border/50">
           <CardContent className="pt-4 text-center">
             <p className="text-2xl font-bold font-mono text-expense">
-              {formatCurrency(totalExpenses)}
+              {formatCurrency(totalExpenses, language)}
             </p>
-            <p className="text-xs text-muted-foreground">Total Expenses</p>
+            <p className="text-xs text-muted-foreground">{t('categorize.total')}</p>
           </CardContent>
         </Card>
         <Card className="border-border/50">
@@ -53,7 +59,7 @@ export function ExpenseCategorization({
             <p className="text-2xl font-bold font-mono text-foreground">
               {expenses.length}
             </p>
-            <p className="text-xs text-muted-foreground">Transactions</p>
+            <p className="text-xs text-muted-foreground">{t('categorize.count')}</p>
           </CardContent>
         </Card>
         <Card className="border-border/50">
@@ -61,7 +67,7 @@ export function ExpenseCategorization({
             <p className="text-2xl font-bold font-mono text-primary">
               {categorizedCount}/{expenses.length}
             </p>
-            <p className="text-xs text-muted-foreground">Categorized</p>
+            <p className="text-xs text-muted-foreground">{t('categorize.category')}</p>
           </CardContent>
         </Card>
       </div>
@@ -71,19 +77,19 @@ export function ExpenseCategorization({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Tag className="w-5 h-5 text-primary" />
-            Expense Entries
+            {t('categorize.title')}
           </CardTitle>
           <CardDescription>
-            Click on each category dropdown to assign categories
+            {expenses.length} {t('import.transactions')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {expenses.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <BarChart3 className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>No expenses imported yet</p>
+              <p>{t('categorize.noExpenses')}</p>
               <Button variant="outline" className="mt-4" onClick={onBack}>
-                Go back to import
+                {t('categorize.importFirst')}
               </Button>
             </div>
           ) : (
@@ -92,16 +98,16 @@ export function ExpenseCategorization({
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Date
+                      {t('categorize.date')}
                     </th>
                     <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Description
+                      {t('categorize.description')}
                     </th>
                     <th className="text-right py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Amount
+                      {t('categorize.amount')}
                     </th>
                     <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Category
+                      {t('categorize.category')}
                     </th>
                     <th className="w-10"></th>
                   </tr>
@@ -116,31 +122,31 @@ export function ExpenseCategorization({
                         {expense.description}
                       </td>
                       <td className="py-3 px-2 text-sm font-mono font-medium text-expense text-right whitespace-nowrap">
-                        {formatCurrency(expense.amount)}
+                        {formatCurrency(expense.amount, language)}
                       </td>
                       <td className="py-3 px-2">
                         <Select 
                           value={expense.category} 
-                          onValueChange={(v) => onUpdateCategory(expense.id, v as ExpenseCategory)}
+                          onValueChange={(v) => onUpdateCategory(expense.id, v)}
                         >
                           <SelectTrigger className="w-[180px] h-8 text-xs bg-secondary border-border">
                             <div className="flex items-center gap-2">
                               <div 
                                 className="w-2 h-2 rounded-full" 
-                                style={{ backgroundColor: CATEGORY_COLORS[expense.category] }}
+                                style={{ backgroundColor: getCategoryColor(expense.category) }}
                               />
                               <SelectValue />
                             </div>
                           </SelectTrigger>
                           <SelectContent className="bg-popover border-border">
-                            {EXPENSE_CATEGORIES.map((cat) => (
+                            {categories.map((cat) => (
                               <SelectItem key={cat} value={cat}>
                                 <div className="flex items-center gap-2">
                                   <div 
                                     className="w-2 h-2 rounded-full" 
-                                    style={{ backgroundColor: CATEGORY_COLORS[cat] }}
+                                    style={{ backgroundColor: getCategoryColor(cat) }}
                                   />
-                                  {cat}
+                                  {getTranslatedCategory(cat)}
                                 </div>
                               </SelectItem>
                             ))}
@@ -168,11 +174,12 @@ export function ExpenseCategorization({
 
       <div className="flex justify-between pt-4">
         <Button variant="outline" onClick={onBack}>
-          Back to Import
+          <ArrowLeft className="w-4 h-4" />
+          {t('categorize.back')}
         </Button>
         <Button onClick={onNext} disabled={expenses.length === 0}>
           <ArrowRight className="w-4 h-4" />
-          View Dashboard
+          {t('categorize.continue')}
         </Button>
       </div>
     </div>

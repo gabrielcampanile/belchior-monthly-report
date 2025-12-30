@@ -3,6 +3,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FinancialSummary, EXPENSE_CATEGORIES, CATEGORY_COLORS, ExpenseCategory } from '@/types/finance';
+import { useApp } from '@/contexts/AppContext';
+import { formatCurrency } from '@/lib/currencyParser';
 
 interface DashboardProps {
   summary: FinancialSummary;
@@ -11,11 +13,12 @@ interface DashboardProps {
 }
 
 export function Dashboard({ summary, onExportPDF, onBack }: DashboardProps) {
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
+  const { language, t } = useApp();
+
+  const getTranslatedCategory = (category: string) => {
+    const key = `category.${category}`;
+    const translated = t(key);
+    return translated !== key ? translated : category;
   };
 
   const formatPercent = (value: number) => {
@@ -25,7 +28,7 @@ export function Dashboard({ summary, onExportPDF, onBack }: DashboardProps) {
   const chartData = EXPENSE_CATEGORIES
     .filter(cat => summary.expensesByCategory[cat] > 0)
     .map(cat => ({
-      name: cat,
+      name: getTranslatedCategory(cat),
       value: summary.expensesByCategory[cat],
       color: CATEGORY_COLORS[cat],
     }));
@@ -37,10 +40,10 @@ export function Dashboard({ summary, onExportPDF, onBack }: DashboardProps) {
         <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
           <p className="font-medium text-foreground">{data.name}</p>
           <p className="text-sm font-mono" style={{ color: data.color }}>
-            {formatCurrency(data.value)}
+            {formatCurrency(data.value, language)}
           </p>
           <p className="text-xs text-muted-foreground">
-            {((data.value / summary.totalExpenses) * 100).toFixed(1)}% of expenses
+            {((data.value / summary.totalExpenses) * 100).toFixed(1)}%
           </p>
         </div>
       );
@@ -51,8 +54,8 @@ export function Dashboard({ summary, onExportPDF, onBack }: DashboardProps) {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-foreground mb-2">Monthly Summary</h2>
-        <p className="text-muted-foreground">Your financial overview for this month</p>
+        <h2 className="text-2xl font-bold text-foreground mb-2">{t('dashboard.title')}</h2>
+        <p className="text-muted-foreground">{t('dashboard.subtitle')}</p>
       </div>
 
       {/* Key Metrics */}
@@ -62,9 +65,9 @@ export function Dashboard({ summary, onExportPDF, onBack }: DashboardProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Income</p>
+                <p className="text-sm text-muted-foreground">{t('dashboard.totalIncome')}</p>
                 <p className="text-2xl font-bold font-mono text-income">
-                  {formatCurrency(summary.totalIncome)}
+                  {formatCurrency(summary.totalIncome, language)}
                 </p>
               </div>
               <div className="w-12 h-12 rounded-full bg-income/10 flex items-center justify-center">
@@ -79,9 +82,9 @@ export function Dashboard({ summary, onExportPDF, onBack }: DashboardProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Expenses</p>
+                <p className="text-sm text-muted-foreground">{t('dashboard.totalExpenses')}</p>
                 <p className="text-2xl font-bold font-mono text-expense">
-                  {formatCurrency(summary.totalExpenses)}
+                  {formatCurrency(summary.totalExpenses, language)}
                 </p>
               </div>
               <div className="w-12 h-12 rounded-full bg-expense/10 flex items-center justify-center">
@@ -96,9 +99,9 @@ export function Dashboard({ summary, onExportPDF, onBack }: DashboardProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Net Investment</p>
+                <p className="text-sm text-muted-foreground">{t('dashboard.netInvestment')}</p>
                 <p className="text-2xl font-bold font-mono text-investment">
-                  {formatCurrency(summary.totalInvestment)}
+                  {formatCurrency(summary.totalInvestment, language)}
                 </p>
               </div>
               <div className="w-12 h-12 rounded-full bg-investment/10 flex items-center justify-center">
@@ -113,7 +116,7 @@ export function Dashboard({ summary, onExportPDF, onBack }: DashboardProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Invested %</p>
+                <p className="text-sm text-muted-foreground">{t('dashboard.invested')}</p>
                 <p className="text-2xl font-bold font-mono text-primary">
                   {formatPercent(summary.investedPercentage)}
                 </p>
@@ -131,8 +134,8 @@ export function Dashboard({ summary, onExportPDF, onBack }: DashboardProps) {
         {/* Pie Chart */}
         <Card className="border-border/50">
           <CardHeader>
-            <CardTitle>Expenses by Category</CardTitle>
-            <CardDescription>Visual breakdown of your spending</CardDescription>
+            <CardTitle>{t('dashboard.breakdown')}</CardTitle>
+            <CardDescription>{t('dashboard.subtitle')}</CardDescription>
           </CardHeader>
           <CardContent>
             {chartData.length > 0 ? (
@@ -161,7 +164,7 @@ export function Dashboard({ summary, onExportPDF, onBack }: DashboardProps) {
               </div>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                No expense data to display
+                {t('categorize.noExpenses')}
               </div>
             )}
           </CardContent>
@@ -170,11 +173,43 @@ export function Dashboard({ summary, onExportPDF, onBack }: DashboardProps) {
         {/* Category List */}
         <Card className="border-border/50">
           <CardHeader>
-            <CardTitle>Category Details</CardTitle>
-            <CardDescription>Amount spent per category</CardDescription>
+            <CardTitle>{t('dashboard.spentVsInvested')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="space-y-4 mb-6">
+              <div className="flex h-8 rounded-lg overflow-hidden">
+                <div 
+                  className="bg-expense flex items-center justify-center text-xs font-medium text-expense-foreground transition-all duration-500"
+                  style={{ width: `${Math.min(summary.spentPercentage, 100)}%` }}
+                >
+                  {summary.spentPercentage > 10 && t('dashboard.spent')}
+                </div>
+                <div 
+                  className="bg-investment flex items-center justify-center text-xs font-medium text-investment-foreground transition-all duration-500"
+                  style={{ width: `${Math.min(summary.investedPercentage, 100)}%` }}
+                >
+                  {summary.investedPercentage > 10 && t('dashboard.invested')}
+                </div>
+              </div>
+              <div className="flex justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-expense" />
+                  <span className="text-muted-foreground">{t('dashboard.spent')}:</span>
+                  <span className="font-mono font-medium text-foreground">
+                    {formatPercent(summary.spentPercentage)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-investment" />
+                  <span className="text-muted-foreground">{t('dashboard.invested')}:</span>
+                  <span className="font-mono font-medium text-foreground">
+                    {formatPercent(summary.investedPercentage)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-4 border-t border-border">
               {EXPENSE_CATEGORIES
                 .filter(cat => summary.expensesByCategory[cat] > 0)
                 .sort((a, b) => summary.expensesByCategory[b] - summary.expensesByCategory[a])
@@ -192,10 +227,10 @@ export function Dashboard({ summary, onExportPDF, onBack }: DashboardProps) {
                             className="w-3 h-3 rounded-full" 
                             style={{ backgroundColor: CATEGORY_COLORS[cat] }}
                           />
-                          <span className="text-sm text-foreground">{cat}</span>
+                          <span className="text-sm text-foreground">{getTranslatedCategory(cat)}</span>
                         </div>
                         <span className="text-sm font-mono font-medium text-foreground">
-                          {formatCurrency(amount)}
+                          {formatCurrency(amount, language)}
                         </span>
                       </div>
                       <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
@@ -213,7 +248,7 @@ export function Dashboard({ summary, onExportPDF, onBack }: DashboardProps) {
               
               {chartData.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
-                  No categorized expenses yet
+                  {t('categorize.noExpenses')}
                 </div>
               )}
             </div>
@@ -221,56 +256,14 @@ export function Dashboard({ summary, onExportPDF, onBack }: DashboardProps) {
         </Card>
       </div>
 
-      {/* Spent vs Invested Bar */}
-      <Card className="border-border/50">
-        <CardHeader>
-          <CardTitle>Income Allocation</CardTitle>
-          <CardDescription>How your income was distributed this month</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex h-8 rounded-lg overflow-hidden">
-              <div 
-                className="bg-expense flex items-center justify-center text-xs font-medium text-expense-foreground transition-all duration-500"
-                style={{ width: `${Math.min(summary.spentPercentage, 100)}%` }}
-              >
-                {summary.spentPercentage > 10 && 'Spent'}
-              </div>
-              <div 
-                className="bg-investment flex items-center justify-center text-xs font-medium text-investment-foreground transition-all duration-500"
-                style={{ width: `${Math.min(summary.investedPercentage, 100)}%` }}
-              >
-                {summary.investedPercentage > 10 && 'Saved'}
-              </div>
-            </div>
-            <div className="flex justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-expense" />
-                <span className="text-muted-foreground">Spent:</span>
-                <span className="font-mono font-medium text-foreground">
-                  {formatPercent(summary.spentPercentage)}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-investment" />
-                <span className="text-muted-foreground">Saved:</span>
-                <span className="font-mono font-medium text-foreground">
-                  {formatPercent(summary.investedPercentage)}
-                </span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       <div className="flex justify-between pt-4">
         <Button variant="outline" onClick={onBack}>
           <ArrowLeft className="w-4 h-4" />
-          Back to Categorize
+          {t('dashboard.back')}
         </Button>
         <Button onClick={onExportPDF} variant="glow" size="lg">
           <FileDown className="w-4 h-4" />
-          Export Monthly Report (PDF)
+          {t('dashboard.exportPDF')}
         </Button>
       </div>
     </div>
