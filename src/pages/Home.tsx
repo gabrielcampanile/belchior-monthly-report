@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Calendar, TrendingUp, TrendingDown, PiggyBank, Trash2, Eye, Loader2 } from 'lucide-react';
+import { Plus, Calendar, TrendingUp, TrendingDown, PiggyBank, Trash2, Eye, Loader2, CheckCircle2, PenLine } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -131,7 +131,9 @@ export default function Home() {
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {closures.map(closure => (
+            {closures.map(closure => {
+              const isComplete = closure.totalIncome > 0 && closure.totalExpenses > 0;
+              return (
               <Card
                 key={closure.id}
                 className="border-border/50 hover:border-primary/30 transition-colors cursor-pointer group"
@@ -139,9 +141,22 @@ export default function Home() {
               >
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg capitalize">
-                      {getMonthName(closure.month)} {closure.year}
-                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-lg capitalize">
+                        {getMonthName(closure.month)} {closure.year}
+                      </CardTitle>
+                      {isComplete ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-income/10 text-income">
+                          <CheckCircle2 className="h-3 w-3" />
+                          {t('home.complete')}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-muted text-muted-foreground">
+                          <PenLine className="h-3 w-3" />
+                          {t('home.draft')}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         variant="ghost"
@@ -213,7 +228,8 @@ export default function Home() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>

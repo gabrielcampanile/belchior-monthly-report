@@ -151,6 +151,8 @@ const translations: Record<Language, Record<string, string>> = {
     'home.savedTitle': 'Closure Saved',
     'home.savedDesc': 'Your monthly closure was saved successfully.',
     'home.backHome': 'Back to Home',
+    'home.complete': 'Complete',
+    'home.draft': 'Draft',
 
     // History
     'history.title': 'Financial History',
@@ -349,6 +351,8 @@ const translations: Record<Language, Record<string, string>> = {
     'home.savedTitle': 'Fechamento Salvo',
     'home.savedDesc': 'Seu fechamento mensal foi salvo com sucesso.',
     'home.backHome': 'Voltar ao Início',
+    'home.complete': 'Completo',
+    'home.draft': 'Rascunho',
 
     // History
     'history.title': 'Histórico Financeiro',
