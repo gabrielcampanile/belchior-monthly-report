@@ -118,7 +118,25 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.spent': 'Spent',
     'dashboard.exportPDF': 'Export Monthly Report',
     'dashboard.back': 'Back',
+    'dashboard.save': 'Save Closure',
     
+    // Home
+    'home.title': 'My Closures',
+    'home.subtitle': 'Monthly financial closures',
+    'home.newClosure': 'New Closure',
+    'home.selectPeriod': 'Select Period',
+    'home.month': 'Month',
+    'home.year': 'Year',
+    'home.startClosure': 'Start Closure',
+    'home.empty': 'No closures yet',
+    'home.emptyDesc': 'Create your first monthly closure to start tracking your finances.',
+    'home.deleteTitle': 'Delete Closure',
+    'home.deleteDesc': 'This action cannot be undone. All data for this closure will be permanently deleted.',
+    'home.updatedAt': 'Updated',
+    'home.savedTitle': 'Closure Saved',
+    'home.savedDesc': 'Your monthly closure was saved successfully.',
+    'home.backHome': 'Back to Home',
+
     // Settings
     'settings.manageIncomeTypes': 'Manage Income Types',
     'settings.manageCategories': 'Manage Categories',
@@ -254,6 +272,25 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.spent': 'Gasto',
     'dashboard.exportPDF': 'Exportar Relatório Mensal',
     'dashboard.back': 'Voltar',
+    'dashboard.save': 'Salvar Fechamento',
+    
+    // Home
+    'home.title': 'Meus Fechamentos',
+    'home.subtitle': 'Fechamentos financeiros mensais',
+    'home.newClosure': 'Novo Fechamento',
+    'home.selectPeriod': 'Selecionar Período',
+    'home.month': 'Mês',
+    'home.year': 'Ano',
+    'home.startClosure': 'Iniciar Fechamento',
+    'home.empty': 'Nenhum fechamento ainda',
+    'home.emptyDesc': 'Crie seu primeiro fechamento mensal para começar a acompanhar suas finanças.',
+    'home.deleteTitle': 'Excluir Fechamento',
+    'home.deleteDesc': 'Esta ação não pode ser desfeita. Todos os dados deste fechamento serão permanentemente excluídos.',
+    'home.updatedAt': 'Atualizado',
+    'home.savedTitle': 'Fechamento Salvo',
+    'home.savedDesc': 'Seu fechamento mensal foi salvo com sucesso.',
+    'home.backHome': 'Voltar ao Início',
+
     
     // Settings
     'settings.manageIncomeTypes': 'Gerenciar Tipos de Renda',
