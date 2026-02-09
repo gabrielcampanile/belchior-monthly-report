@@ -7,6 +7,7 @@ import { ExpenseCategorization } from '@/components/ExpenseCategorization';
 import { Dashboard } from '@/components/Dashboard';
 import { useFinanceStore } from '@/hooks/useFinanceStore';
 import { useCategoryStore } from '@/hooks/useCategoryStore';
+import { useCategorizationRules } from '@/hooks/useCategorizationRules';
 import { generatePDFReport } from '@/lib/pdfExport';
 import { toast } from '@/hooks/use-toast';
 import { useApp } from '@/contexts/AppContext';
@@ -32,6 +33,7 @@ const Index = () => {
     removeExpense,
     clearAllExpenses,
   } = useFinanceStore();
+  const { autoCategorize, rules, addRule, removeRule } = useCategorizationRules();
 
   const {
     categories,
@@ -97,6 +99,9 @@ const Index = () => {
             onRemoveExpense={removeExpense}
             onNext={() => setCurrentStep(4)}
             onBack={() => setCurrentStep(2)}
+            rules={rules}
+            onAddRule={addRule}
+            onRemoveRule={removeRule}
           />
         );
       case 4:
