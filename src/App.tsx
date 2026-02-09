@@ -5,7 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProvider } from "@/contexts/AppContext";
 import { AuthGuard } from "@/components/AuthGuard";
-import Index from "./pages/Index";
+import Home from "./pages/Home";
+import Closure from "./pages/Closure";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -24,7 +25,23 @@ const App = () => (
               path="/"
               element={
                 <AuthGuard>
-                  <Index />
+                  <Home />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/closure/new"
+              element={
+                <AuthGuard>
+                  <Closure />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/closure/:id"
+              element={
+                <AuthGuard>
+                  <Closure />
                 </AuthGuard>
               }
             />

@@ -86,5 +86,7 @@ export function useFinanceStore() {
     updateExpenseCategory,
     removeExpense,
     clearAllExpenses,
+    setIncomes,
+    setExpenses,
   };
 }
