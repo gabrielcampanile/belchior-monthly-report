@@ -7,6 +7,7 @@ import { AppProvider } from "@/contexts/AppContext";
 import { AuthGuard } from "@/components/AuthGuard";
 import Home from "./pages/Home";
 import Closure from "./pages/Closure";
+import History from "./pages/History";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -42,6 +43,14 @@ const App = () => (
               element={
                 <AuthGuard>
                   <Closure />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/history"
+              element={
+                <AuthGuard>
+                  <History />
                 </AuthGuard>
               }
             />

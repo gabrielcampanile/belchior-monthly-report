@@ -137,6 +137,35 @@ const translations: Record<Language, Record<string, string>> = {
     'home.savedDesc': 'Your monthly closure was saved successfully.',
     'home.backHome': 'Back to Home',
 
+    // History
+    'history.title': 'Financial History',
+    'history.subtitle': 'Track your financial evolution over time',
+    'history.allTime': 'All Time',
+    'history.annual': 'Annual',
+    'history.semester': 'Semester',
+    'history.quarter': 'Quarter',
+    'history.bimonth': 'Bimonthly',
+    'history.evolution': 'Income vs Expenses Evolution',
+    'history.comparison': 'Monthly Comparison',
+    'history.investmentEvolution': 'Investment % Evolution',
+    'history.monthComparison': 'Month-over-Month',
+    'history.period': 'Period',
+    'history.incomeChange': 'Income Δ',
+    'history.expenseChange': 'Expenses Δ',
+    'history.noData': 'No data for this period',
+    'history.noDataDesc': 'Save some monthly closures to see your financial history.',
+    'history.needMore': 'You need at least 2 closures to see evolution charts.',
+    'history.totalIncome': 'Total Income',
+    'history.totalExpenses': 'Total Expenses',
+    'history.totalInvestment': 'Total Investment',
+    'history.avgInvested': 'Avg. Invested',
+    'history.avg': 'Avg',
+    'history.months': 'months',
+
+    // Nav
+    'nav.home': 'Home',
+    'nav.history': 'History',
+
     // Settings
     'settings.manageIncomeTypes': 'Manage Income Types',
     'settings.manageCategories': 'Manage Categories',
@@ -290,6 +319,35 @@ const translations: Record<Language, Record<string, string>> = {
     'home.savedTitle': 'Fechamento Salvo',
     'home.savedDesc': 'Seu fechamento mensal foi salvo com sucesso.',
     'home.backHome': 'Voltar ao Início',
+
+    // History
+    'history.title': 'Histórico Financeiro',
+    'history.subtitle': 'Acompanhe sua evolução financeira ao longo do tempo',
+    'history.allTime': 'Todo o Período',
+    'history.annual': 'Anual',
+    'history.semester': 'Semestral',
+    'history.quarter': 'Trimestral',
+    'history.bimonth': 'Bimestral',
+    'history.evolution': 'Evolução Receita vs Despesas',
+    'history.comparison': 'Comparativo Mensal',
+    'history.investmentEvolution': 'Evolução % Investido',
+    'history.monthComparison': 'Mês a Mês',
+    'history.period': 'Período',
+    'history.incomeChange': 'Renda Δ',
+    'history.expenseChange': 'Despesas Δ',
+    'history.noData': 'Sem dados para este período',
+    'history.noDataDesc': 'Salve alguns fechamentos mensais para ver seu histórico financeiro.',
+    'history.needMore': 'Você precisa de pelo menos 2 fechamentos para ver os gráficos de evolução.',
+    'history.totalIncome': 'Renda Total',
+    'history.totalExpenses': 'Total de Despesas',
+    'history.totalInvestment': 'Investimento Total',
+    'history.avgInvested': 'Média Investida',
+    'history.avg': 'Média',
+    'history.months': 'meses',
+
+    // Nav
+    'nav.home': 'Início',
+    'nav.history': 'Histórico',
 
     
     // Settings

@@ -1,6 +1,7 @@
-import { Calculator, LogOut } from 'lucide-react';
+import { Calculator, LogOut, Home, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import { SettingsDialog } from '@/components/SettingsDialog';
 import { useAuth } from '@/hooks/useAuth';
@@ -31,6 +32,8 @@ export function Header({
 }: HeaderProps) {
   const { language, t } = useApp();
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const currentMonth = format(
     new Date(), 
     'MMMM yyyy', 
@@ -63,7 +66,28 @@ export function Header({
           <div>
             <h1 className="text-lg font-semibold text-foreground">{t('app.title')}</h1>
             <p className="text-xs text-muted-foreground">{t('app.subtitle')}</p>
-          </div>
+        </div>
+
+        <nav className="hidden sm:flex items-center gap-1">
+          <Button
+            variant={location.pathname === '/' ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => navigate('/')}
+            className="gap-1.5"
+          >
+            <Home className="h-4 w-4" />
+            {t('nav.home')}
+          </Button>
+          <Button
+            variant={location.pathname === '/history' ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => navigate('/history')}
+            className="gap-1.5"
+          >
+            <BarChart3 className="h-4 w-4" />
+            {t('nav.history')}
+          </Button>
+        </nav>
         </div>
         
         <div className="flex items-center gap-3">
