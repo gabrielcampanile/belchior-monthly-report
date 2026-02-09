@@ -14,7 +14,160 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      categorization_rules: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          keyword: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          keyword: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          keyword?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      closure_expenses: {
+        Row: {
+          amount: number
+          category: string
+          closure_id: string
+          date: string | null
+          description: string
+          id: string
+        }
+        Insert: {
+          amount: number
+          category?: string
+          closure_id: string
+          date?: string | null
+          description: string
+          id?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          closure_id?: string
+          date?: string | null
+          description?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "closure_expenses_closure_id_fkey"
+            columns: ["closure_id"]
+            isOneToOne: false
+            referencedRelation: "monthly_closures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      closure_incomes: {
+        Row: {
+          amount: number
+          closure_id: string
+          id: string
+          source: string
+          type: string
+        }
+        Insert: {
+          amount: number
+          closure_id: string
+          id?: string
+          source: string
+          type: string
+        }
+        Update: {
+          amount?: number
+          closure_id?: string
+          id?: string
+          source?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "closure_incomes_closure_id_fkey"
+            columns: ["closure_id"]
+            isOneToOne: false
+            referencedRelation: "monthly_closures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monthly_closures: {
+        Row: {
+          created_at: string
+          id: string
+          invested_percentage: number
+          month: number
+          spent_percentage: number
+          total_expenses: number
+          total_income: number
+          total_investment: number
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invested_percentage?: number
+          month: number
+          spent_percentage?: number
+          total_expenses?: number
+          total_income?: number
+          total_investment?: number
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invested_percentage?: number
+          month?: number
+          spent_percentage?: number
+          total_expenses?: number
+          total_income?: number
+          total_investment?: number
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
