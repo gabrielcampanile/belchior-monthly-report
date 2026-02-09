@@ -115,6 +115,12 @@ const translations: Record<Language, Record<string, string>> = {
     'categorize.continue': 'View Summary',
     'categorize.back': 'Back',
     
+    // Rules
+    'rules.title': 'Auto-categorization Rules',
+    'rules.count': 'rules',
+    'rules.keywordPlaceholder': 'Keyword (e.g., uber, netflix...)',
+    'rules.saveRule': 'Save as rule',
+    
     // Dashboard
     'dashboard.title': 'Monthly Summary',
     'dashboard.subtitle': 'Your financial overview for this month',
@@ -306,6 +312,12 @@ const translations: Record<Language, Record<string, string>> = {
     'categorize.importFirst': 'Importe sua fatura de cartão primeiro',
     'categorize.continue': 'Ver Resumo',
     'categorize.back': 'Voltar',
+    
+    // Rules
+    'rules.title': 'Regras de Auto-categorização',
+    'rules.count': 'regras',
+    'rules.keywordPlaceholder': 'Palavra-chave (ex: uber, netflix...)',
+    'rules.saveRule': 'Salvar como regra',
     
     // Dashboard
     'dashboard.title': 'Resumo Mensal',

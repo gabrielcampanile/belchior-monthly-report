@@ -9,6 +9,7 @@ import { Dashboard } from '@/components/Dashboard';
 import { useFinanceStore } from '@/hooks/useFinanceStore';
 import { useCategoryStore } from '@/hooks/useCategoryStore';
 import { useClosures } from '@/hooks/useClosures';
+import { useCategorizationRules } from '@/hooks/useCategorizationRules';
 import { generatePDFReport } from '@/lib/pdfExport';
 import { toast } from '@/hooks/use-toast';
 import { useApp } from '@/contexts/AppContext';
@@ -45,6 +46,7 @@ export default function Closure() {
 
   const categoryStore = useCategoryStore();
   const { saveClosure, loadClosure } = useClosures();
+  const { autoCategorize, rules, addRule, removeRule } = useCategorizationRules();
 
   // Load existing closure data
   useEffect(() => {
@@ -136,7 +138,7 @@ export default function Closure() {
         return (
           <CSVImport
             categories={categoryStore.categories}
-            onImport={addExpenses}
+            onImport={(exps) => addExpenses(autoCategorize(exps))}
             onImportIncomes={(newIncomes) => {
               newIncomes.forEach(inc => addIncome(inc));
             }}
@@ -156,6 +158,9 @@ export default function Closure() {
             onRemoveExpense={removeExpense}
             onNext={() => setCurrentStep(4)}
             onBack={() => setCurrentStep(2)}
+            rules={rules}
+            onAddRule={addRule}
+            onRemoveRule={removeRule}
           />
         );
       case 4:
