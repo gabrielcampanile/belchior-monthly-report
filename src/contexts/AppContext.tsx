@@ -125,6 +125,21 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.language': 'Language',
     'settings.highContrast': 'High Contrast',
     
+    // Auth
+    'auth.subtitle': 'Sign in to manage your finances',
+    'auth.googleButton': 'Sign in with Google',
+    'auth.or': 'or continue with email',
+    'auth.login': 'Login',
+    'auth.signup': 'Sign Up',
+    'auth.email': 'Email',
+    'auth.password': 'Password',
+    'auth.loginButton': 'Sign In',
+    'auth.signupButton': 'Create Account',
+    'auth.error': 'Authentication Error',
+    'auth.checkEmail': 'Check your email',
+    'auth.checkEmailDesc': 'We sent you a confirmation link.',
+    'auth.logout': 'Logout',
+
     // Common
     'common.save': 'Save',
     'common.cancel': 'Cancel',
@@ -246,6 +261,21 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.language': 'Idioma',
     'settings.highContrast': 'Alto Contraste',
     
+    // Auth
+    'auth.subtitle': 'Faça login para gerenciar suas finanças',
+    'auth.googleButton': 'Entrar com Google',
+    'auth.or': 'ou continue com email',
+    'auth.login': 'Entrar',
+    'auth.signup': 'Criar Conta',
+    'auth.email': 'Email',
+    'auth.password': 'Senha',
+    'auth.loginButton': 'Entrar',
+    'auth.signupButton': 'Criar Conta',
+    'auth.error': 'Erro de Autenticação',
+    'auth.checkEmail': 'Verifique seu email',
+    'auth.checkEmailDesc': 'Enviamos um link de confirmação.',
+    'auth.logout': 'Sair',
+
     // Common
     'common.save': 'Salvar',
     'common.cancel': 'Cancelar',
