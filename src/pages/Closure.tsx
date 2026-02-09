@@ -137,6 +137,9 @@ export default function Closure() {
           <CSVImport
             categories={categoryStore.categories}
             onImport={addExpenses}
+            onImportIncomes={(newIncomes) => {
+              newIncomes.forEach(inc => addIncome(inc));
+            }}
             onNext={() => setCurrentStep(3)}
             onBack={() => setCurrentStep(1)}
             hasExpenses={expenses.length > 0}

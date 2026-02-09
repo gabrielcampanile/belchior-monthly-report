@@ -70,6 +70,15 @@ const translations: Record<Language, Record<string, string>> = {
     'import.description': 'Description',
     'import.descPlaceholder': 'e.g., Restaurant, Gas station...',
     'import.addExpense': 'Add Expense',
+    'import.fileType': 'File Type',
+    'import.creditCard': 'Credit Card',
+    'import.bankStatement': 'Bank Statement',
+    'import.creditCardDesc': 'All values will be imported as expenses.',
+    'import.bankStatementDesc': 'Positive values = income, negative values = expenses.',
+    'import.incomeLabel': 'Income',
+    'import.expenseLabel': 'Expense',
+    'import.type': 'Type',
+    'import.noValid': 'No valid transactions found in CSV',
     
     // Categories
     'categories.title': 'Manage Categories',
@@ -253,6 +262,15 @@ const translations: Record<Language, Record<string, string>> = {
     'import.description': 'Descrição',
     'import.descPlaceholder': 'ex., Restaurante, Posto de gasolina...',
     'import.addExpense': 'Adicionar Despesa',
+    'import.fileType': 'Tipo de Arquivo',
+    'import.creditCard': 'Fatura de Cartão',
+    'import.bankStatement': 'Extrato Bancário',
+    'import.creditCardDesc': 'Todos os valores serão importados como despesas.',
+    'import.bankStatementDesc': 'Valores positivos = receita, negativos = despesa.',
+    'import.incomeLabel': 'Receita',
+    'import.expenseLabel': 'Despesa',
+    'import.type': 'Tipo',
+    'import.noValid': 'Nenhuma transação válida encontrada no CSV',
     
     // Categories
     'categories.title': 'Gerenciar Categorias',

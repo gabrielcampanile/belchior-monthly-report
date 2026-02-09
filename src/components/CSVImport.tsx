@@ -1,18 +1,21 @@
 import { useState, useCallback } from 'react';
-import { Upload, FileSpreadsheet, ArrowRight, AlertCircle, X, Plus, Calendar, Trash2 } from 'lucide-react';
+import { Upload, FileSpreadsheet, ArrowRight, AlertCircle, X, Plus, Calendar, Trash2, CreditCard, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ExpenseEntry } from '@/types/finance';
+import { ExpenseEntry, IncomeEntry } from '@/types/finance';
 import { useApp } from '@/contexts/AppContext';
 import { parseBRLCurrency, tryMergeCurrencyColumns, formatCurrency } from '@/lib/currencyParser';
 import { format } from 'date-fns';
 
+type FileType = 'credit_card' | 'bank_statement';
+
 interface CSVImportProps {
   categories: string[];
   onImport: (expenses: Omit<ExpenseEntry, 'id'>[]) => void;
+  onImportIncomes?: (incomes: Omit<IncomeEntry, 'id'>[]) => void;
   onNext: () => void;
   onBack: () => void;
   hasExpenses: boolean;
@@ -20,7 +23,7 @@ interface CSVImportProps {
   expenseCount: number;
 }
 
-export function CSVImport({ categories, onImport, onNext, onBack, hasExpenses, onClearExpenses, expenseCount }: CSVImportProps) {
+export function CSVImport({ categories, onImport, onImportIncomes, onNext, onBack, hasExpenses, onClearExpenses, expenseCount }: CSVImportProps) {
   const { language, t } = useApp();
   const [csvData, setCsvData] = useState<string[][]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
@@ -31,6 +34,7 @@ export function CSVImport({ categories, onImport, onNext, onBack, hasExpenses, o
   }>({ date: '', description: '', amount: '' });
   const [error, setError] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [fileType, setFileType] = useState<FileType>('credit_card');
 
   // Manual expense form
   const [manualDate, setManualDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -110,28 +114,59 @@ export function CSVImport({ categories, onImport, onNext, onBack, hasExpenses, o
     const descIndex = headers.indexOf(mapping.description);
     const amountIndex = headers.indexOf(mapping.amount);
 
-    const expenses: Omit<ExpenseEntry, 'id'>[] = csvData
+    const rows = csvData
       .filter(row => row.length > Math.max(dateIndex, descIndex, amountIndex))
       .map(row => {
-        // Try to merge currency columns if needed (handles Brazilian format)
         const amountStr = tryMergeCurrencyColumns(row, amountIndex);
-        const amount = Math.abs(parseBRLCurrency(amountStr));
-        
+        const rawAmount = parseBRLCurrency(amountStr);
         return {
           date: row[dateIndex],
           description: row[descIndex],
-          amount,
-          category: categories[categories.length - 1] as any, // Default to last category (Other)
+          rawAmount,
         };
       })
-      .filter(e => e.amount > 0 && e.description.trim());
+      .filter(r => r.rawAmount !== 0 && r.description.trim());
 
-    if (expenses.length === 0) {
-      setError('No valid expenses found in CSV');
+    if (rows.length === 0) {
+      setError(t('import.noValid'));
       return;
     }
 
-    onImport(expenses);
+    if (fileType === 'credit_card') {
+      // All values are expenses (take absolute value)
+      const expenses: Omit<ExpenseEntry, 'id'>[] = rows.map(r => ({
+        date: r.date,
+        description: r.description,
+        amount: Math.abs(r.rawAmount),
+        category: categories[categories.length - 1] as any,
+      }));
+      onImport(expenses);
+    } else {
+      // Bank statement: positive = income, negative = expense
+      const expenses: Omit<ExpenseEntry, 'id'>[] = [];
+      const incomes: Omit<IncomeEntry, 'id'>[] = [];
+
+      for (const r of rows) {
+        if (r.rawAmount < 0) {
+          expenses.push({
+            date: r.date,
+            description: r.description,
+            amount: Math.abs(r.rawAmount),
+            category: categories[categories.length - 1] as any,
+          });
+        } else {
+          incomes.push({
+            source: r.description,
+            type: 'Other',
+            amount: r.rawAmount,
+          });
+        }
+      }
+
+      if (expenses.length > 0) onImport(expenses);
+      if (incomes.length > 0 && onImportIncomes) onImportIncomes(incomes);
+    }
+
     onNext();
   };
 
@@ -161,6 +196,22 @@ export function CSVImport({ categories, onImport, onNext, onBack, hasExpenses, o
     setError(null);
   };
 
+  // Preview: compute parsed amounts for display
+  const previewRows = csvData.slice(0, 5).map(row => {
+    if (!mapping.date || !mapping.description || !mapping.amount) return null;
+    const dateIndex = headers.indexOf(mapping.date);
+    const descIndex = headers.indexOf(mapping.description);
+    const amountIndex = headers.indexOf(mapping.amount);
+    if (row.length <= Math.max(dateIndex, descIndex, amountIndex)) return null;
+    const amountStr = tryMergeCurrencyColumns(row, amountIndex);
+    const rawAmount = parseBRLCurrency(amountStr);
+    return {
+      date: row[dateIndex],
+      description: row[descIndex],
+      rawAmount,
+    };
+  }).filter(Boolean) as { date: string; description: string; rawAmount: number }[];
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="text-center mb-8">
@@ -181,9 +232,39 @@ export function CSVImport({ categories, onImport, onNext, onBack, hasExpenses, o
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* File Type Toggle */}
+            <div className="space-y-2">
+              <Label className="text-xs font-medium">{t('import.fileType')}</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant={fileType === 'credit_card' ? 'default' : 'outline'}
+                  size="sm"
+                  className="gap-2 h-10"
+                  onClick={() => setFileType('credit_card')}
+                >
+                  <CreditCard className="h-4 w-4" />
+                  {t('import.creditCard')}
+                </Button>
+                <Button
+                  type="button"
+                  variant={fileType === 'bank_statement' ? 'default' : 'outline'}
+                  size="sm"
+                  className="gap-2 h-10"
+                  onClick={() => setFileType('bank_statement')}
+                >
+                  <Building2 className="h-4 w-4" />
+                  {t('import.bankStatement')}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {fileType === 'credit_card' ? t('import.creditCardDesc') : t('import.bankStatementDesc')}
+              </p>
+            </div>
+
             {/* Upload Area */}
             {!fileName ? (
-              <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-secondary/30 transition-all duration-200">
+              <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-secondary/30 transition-all duration-200">
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <Upload className="w-10 h-10 text-muted-foreground mb-3" />
                   <p className="mb-2 text-sm text-foreground">
@@ -265,7 +346,7 @@ export function CSVImport({ categories, onImport, onNext, onBack, hasExpenses, o
                 </div>
 
                 {/* Preview */}
-                {csvData.length > 0 && mapping.date && mapping.description && mapping.amount && (
+                {previewRows.length > 0 && (
                   <div className="pt-4">
                     <h4 className="font-medium text-foreground mb-2">{t('import.preview')}</h4>
                     <div className="overflow-x-auto rounded-lg border border-border">
@@ -275,23 +356,61 @@ export function CSVImport({ categories, onImport, onNext, onBack, hasExpenses, o
                             <th className="px-4 py-2 text-left font-medium text-muted-foreground">{t('import.date')}</th>
                             <th className="px-4 py-2 text-left font-medium text-muted-foreground">{t('import.description')}</th>
                             <th className="px-4 py-2 text-right font-medium text-muted-foreground">{t('income.amount')}</th>
+                            {fileType === 'bank_statement' && (
+                              <th className="px-4 py-2 text-center font-medium text-muted-foreground">{t('import.type')}</th>
+                            )}
                           </tr>
                         </thead>
                         <tbody>
-                          {csvData.slice(0, 3).map((row, i) => (
-                            <tr key={i} className="border-t border-border">
-                              <td className="px-4 py-2 text-foreground">{row[headers.indexOf(mapping.date)]}</td>
-                              <td className="px-4 py-2 text-foreground truncate max-w-[150px]">{row[headers.indexOf(mapping.description)]}</td>
-                              <td className="px-4 py-2 text-foreground text-right font-mono">
-                                {formatCurrency(
-                                  parseBRLCurrency(tryMergeCurrencyColumns(row, headers.indexOf(mapping.amount))),
-                                  language
+                          {previewRows.map((row, i) => {
+                            const isIncome = fileType === 'bank_statement' && row.rawAmount > 0;
+                            return (
+                              <tr key={i} className="border-t border-border">
+                                <td className="px-4 py-2 text-foreground">{row.date}</td>
+                                <td className="px-4 py-2 text-foreground truncate max-w-[150px]">{row.description}</td>
+                                <td className={`px-4 py-2 text-right font-mono ${isIncome ? 'text-income' : 'text-expense'}`}>
+                                  {isIncome ? '+' : ''}{formatCurrency(row.rawAmount, language)}
+                                </td>
+                                {fileType === 'bank_statement' && (
+                                  <td className="px-4 py-2 text-center">
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                      isIncome 
+                                        ? 'bg-income/10 text-income' 
+                                        : 'bg-expense/10 text-expense'
+                                    }`}>
+                                      {isIncome ? t('import.incomeLabel') : t('import.expenseLabel')}
+                                    </span>
+                                  </td>
                                 )}
-                              </td>
-                            </tr>
-                          ))}
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Import summary for bank statement */}
+                {fileType === 'bank_statement' && previewRows.length > 0 && (
+                  <div className="flex gap-4 text-sm">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-income" />
+                      <span className="text-muted-foreground">
+                        {csvData.filter(row => {
+                          const idx = headers.indexOf(mapping.amount);
+                          return idx >= 0 && parseBRLCurrency(tryMergeCurrencyColumns(row, idx)) > 0;
+                        }).length} {t('import.incomeLabel')}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-expense" />
+                      <span className="text-muted-foreground">
+                        {csvData.filter(row => {
+                          const idx = headers.indexOf(mapping.amount);
+                          return idx >= 0 && parseBRLCurrency(tryMergeCurrencyColumns(row, idx)) < 0;
+                        }).length} {t('import.expenseLabel')}
+                      </span>
                     </div>
                   </div>
                 )}
