@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ExpenseEntry } from '@/types/finance';
+import { ExpenseEntry, IncomeEntry } from '@/types/finance';
 
 export interface CategorizationRule {
   id: string;
@@ -53,5 +53,16 @@ export function useCategorizationRules() {
     });
   }, [rules]);
 
-  return { rules, loading, addRule, removeRule, autoCategorize };
+  const autoCategorizeIncomes = useCallback((incomes: Omit<IncomeEntry, 'id'>[]): Omit<IncomeEntry, 'id'>[] => {
+    return incomes.map(income => {
+      const srcLower = income.source.toLowerCase();
+      const match = rules.find(r => srcLower.includes(r.keyword.toLowerCase()));
+      if (match) {
+        return { ...income, type: match.category as any };
+      }
+      return income;
+    });
+  }, [rules]);
+
+  return { rules, loading, addRule, removeRule, autoCategorize, autoCategorizeIncomes };
 }

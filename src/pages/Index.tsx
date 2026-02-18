@@ -1,22 +1,22 @@
-import { useState } from 'react';
-import { Header } from '@/components/Header';
-import { StepIndicator } from '@/components/StepIndicator';
-import { IncomeForm } from '@/components/IncomeForm';
-import { CSVImport } from '@/components/CSVImport';
-import { ExpenseCategorization } from '@/components/ExpenseCategorization';
-import { Dashboard } from '@/components/Dashboard';
-import { useFinanceStore } from '@/hooks/useFinanceStore';
-import { useCategoryStore } from '@/hooks/useCategoryStore';
-import { useCategorizationRules } from '@/hooks/useCategorizationRules';
-import { generatePDFReport } from '@/lib/pdfExport';
-import { toast } from '@/hooks/use-toast';
-import { useApp } from '@/contexts/AppContext';
+import { useState } from "react";
+import { Header } from "@/components/Header";
+import { StepIndicator } from "@/components/StepIndicator";
+import { IncomeForm } from "@/components/IncomeForm";
+import { CSVImport } from "@/components/CSVImport";
+import { ExpenseCategorization } from "@/components/ExpenseCategorization";
+import { Dashboard } from "@/components/Dashboard";
+import { useFinanceStore } from "@/hooks/useFinanceStore";
+import { useCategoryStore } from "@/hooks/useCategoryStore";
+import { useCategorizationRules } from "@/hooks/useCategorizationRules";
+import { generatePDFReport } from "@/lib/pdfExport";
+import { toast } from "@/hooks/use-toast";
+import { useApp } from "@/contexts/AppContext";
 
 const STEPS = [
-  { id: 1, label: 'Income' },
-  { id: 2, label: 'Import' },
-  { id: 3, label: 'Categorize' },
-  { id: 4, label: 'Summary' },
+  { id: 1, label: "Income" },
+  { id: 2, label: "Import" },
+  { id: 3, label: "Categorize" },
+  { id: 4, label: "Summary" },
 ];
 
 const Index = () => {
@@ -34,7 +34,8 @@ const Index = () => {
     removeExpense,
     clearAllExpenses,
   } = useFinanceStore();
-  const { autoCategorize, rules, addRule, removeRule } = useCategorizationRules();
+  const { autoCategorize, autoCategorizeIncomes, rules, addRule, removeRule } =
+    useCategorizationRules();
 
   const {
     categories,
@@ -49,19 +50,28 @@ const Index = () => {
 
   const handleExportPDF = () => {
     try {
-      generatePDFReport(summary, incomes, expenses, new Date().getMonth() + 1, new Date().getFullYear(), language);
+      generatePDFReport(
+        summary,
+        incomes,
+        expenses,
+        new Date().getMonth() + 1,
+        new Date().getFullYear(),
+        language,
+      );
       toast({
-        title: language === 'pt' ? "Relatório Exportado" : "Report Exported",
-        description: language === 'pt' 
-          ? "Seu relatório mensal foi baixado como PDF." 
-          : "Your monthly report has been downloaded as PDF.",
+        title: language === "pt" ? "Relatório Exportado" : "Report Exported",
+        description:
+          language === "pt"
+            ? "Seu relatório mensal foi baixado como PDF."
+            : "Your monthly report has been downloaded as PDF.",
       });
     } catch (error) {
       toast({
-        title: language === 'pt' ? "Exportação Falhou" : "Export Failed",
-        description: language === 'pt' 
-          ? "Houve um erro ao gerar o PDF." 
-          : "There was an error generating the PDF.",
+        title: language === "pt" ? "Exportação Falhou" : "Export Failed",
+        description:
+          language === "pt"
+            ? "Houve um erro ao gerar o PDF."
+            : "There was an error generating the PDF.",
         variant: "destructive",
       });
     }
@@ -79,18 +89,27 @@ const Index = () => {
             onUpdateIncomeType={updateIncomeType}
             onNext={() => setCurrentStep(2)}
             onBack={() => {}}
+            rules={rules}
+            onAddRule={addRule}
+            onRemoveRule={removeRule}
           />
         );
       case 2:
         return (
           <CSVImport
             categories={categories}
-            onImport={addExpenses}
+            onImport={(exps) => addExpenses(autoCategorize(exps))}
+            onImportIncomes={(newIncomes) => {
+              autoCategorizeIncomes(newIncomes).forEach((inc) =>
+                addIncome(inc),
+              );
+            }}
             onNext={() => setCurrentStep(3)}
             onBack={() => setCurrentStep(1)}
             hasExpenses={expenses.length > 0}
             onClearExpenses={clearAllExpenses}
             expenseCount={expenses.length}
+            incomeCount={incomes.length}
           />
         );
       case 3:
@@ -139,9 +158,7 @@ const Index = () => {
           currentStep={currentStep}
           onStepClick={setCurrentStep}
         />
-        <div className="mt-6">
-          {renderStep()}
-        </div>
+        <div className="mt-6">{renderStep()}</div>
       </main>
     </div>
   );
