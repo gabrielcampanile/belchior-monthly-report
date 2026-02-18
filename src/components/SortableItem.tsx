@@ -28,7 +28,7 @@ export function SortableItem({ id, children, as = 'div' }: SortableItemProps) {
 
   if (as === 'tr') {
     return (
-      <tr ref={setNodeRef} style={style} {...attributes}>
+      <tr ref={setNodeRef} style={style} {...attributes} className="group">
         <td className="py-3 px-1 w-8">
           <button
             {...listeners}
