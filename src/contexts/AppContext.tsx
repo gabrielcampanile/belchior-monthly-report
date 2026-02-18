@@ -196,7 +196,26 @@ const translations: Record<Language, Record<string, string>> = {
     // Nav
     'nav.home': 'Home',
     'nav.history': 'History',
+    'nav.investments': 'Investments',
     'nav.settings': 'Settings',
+
+    // Investments
+    'investments.title': 'Investments',
+    'investments.subtitle': 'Track your investment portfolio evolution',
+    'investments.currentBalance': 'Current Balance',
+    'investments.addSnapshot': 'Register Monthly Balance',
+    'investments.addSnapshotDesc': 'Enter the total balance of your investments for the selected month. The contribution is auto-filled from your closure.',
+    'investments.balance': 'Balance',
+    'investments.contribution': 'Contribution',
+    'investments.yield': 'Yield',
+    'investments.profitability': 'Profitability',
+    'investments.evolution': 'Portfolio Evolution',
+    'investments.history': 'History',
+    'investments.loading': 'Loading...',
+    'investments.empty': 'No records yet. Add your first monthly balance above.',
+    'investments.saved': 'Snapshot Saved',
+    'investments.savedDesc': 'Your investment balance was recorded successfully.',
+    'investments.deleted': 'Record deleted',
 
     // Settings
     'settings.pageTitle': 'Settings',
@@ -414,7 +433,26 @@ const translations: Record<Language, Record<string, string>> = {
     // Nav
     'nav.home': 'Início',
     'nav.history': 'Histórico',
+    'nav.investments': 'Investimentos',
     'nav.settings': 'Configurações',
+
+    // Investments
+    'investments.title': 'Investimentos',
+    'investments.subtitle': 'Acompanhe a evolução do seu patrimônio investido',
+    'investments.currentBalance': 'Saldo Atual',
+    'investments.addSnapshot': 'Registrar Saldo Mensal',
+    'investments.addSnapshotDesc': 'Informe o saldo total dos seus investimentos no mês selecionado. O aporte é preenchido automaticamente a partir do fechamento.',
+    'investments.balance': 'Saldo',
+    'investments.contribution': 'Aporte',
+    'investments.yield': 'Rendimento',
+    'investments.profitability': 'Rentabilidade',
+    'investments.evolution': 'Evolução do Patrimônio',
+    'investments.history': 'Histórico',
+    'investments.loading': 'Carregando...',
+    'investments.empty': 'Nenhum registro ainda. Adicione seu primeiro saldo mensal acima.',
+    'investments.saved': 'Registro Salvo',
+    'investments.savedDesc': 'O saldo dos seus investimentos foi registrado com sucesso.',
+    'investments.deleted': 'Registro excluído',
 
     
     // Settings

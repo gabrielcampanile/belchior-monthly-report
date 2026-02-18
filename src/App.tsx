@@ -9,6 +9,7 @@ import Home from "./pages/Home";
 import Closure from "./pages/Closure";
 import History from "./pages/History";
 import Settings from "./pages/Settings";
+import Investments from "./pages/Investments";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -52,6 +53,14 @@ const App = () => (
               element={
                 <AuthGuard>
                   <History />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/investments"
+              element={
+                <AuthGuard>
+                  <Investments />
                 </AuthGuard>
               }
             />
