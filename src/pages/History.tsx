@@ -171,6 +171,7 @@ export default function History() {
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t('history.incomeChange')}</th>
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t('dashboard.totalExpenses')}</th>
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t('history.expenseChange')}</th>
+                        <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t('dashboard.netInvestment')}</th>
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t('dashboard.invested')}</th>
                       </tr>
                     </thead>
@@ -208,7 +209,10 @@ export default function History() {
                               <span className="text-muted-foreground">—</span>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-right font-mono text-investment">
+                          <td className="px-4 py-3 text-right font-mono font-semibold text-investment">
+                            {formatCurrency(c.totalInvestment, language)}
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono text-muted-foreground">
                             {c.investedPercentage.toFixed(1)}%
                           </td>
                         </tr>

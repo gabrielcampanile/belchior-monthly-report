@@ -8,6 +8,7 @@ import { AuthGuard } from "@/components/AuthGuard";
 import Home from "./pages/Home";
 import Closure from "./pages/Closure";
 import History from "./pages/History";
+import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -51,6 +52,14 @@ const App = () => (
               element={
                 <AuthGuard>
                   <History />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <AuthGuard>
+                  <Settings />
                 </AuthGuard>
               }
             />

@@ -2,6 +2,7 @@ export type IncomeType = 'Salary' | 'Freelance' | 'Other';
 
 export interface IncomeEntry {
   id: string;
+  date?: string;
   source: string;
   type: IncomeType;
   amount: number;

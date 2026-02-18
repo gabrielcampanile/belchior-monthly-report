@@ -17,8 +17,8 @@ import { Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const STEPS = [
-  { id: 1, label: 'Income' },
-  { id: 2, label: 'Import' },
+  { id: 1, label: 'Import' },
+  { id: 2, label: 'Income' },
   { id: 3, label: 'Categorize' },
   { id: 4, label: 'Summary' },
 ];
@@ -40,7 +40,7 @@ export default function Closure() {
   const {
     incomes, expenses, summary,
     addIncome, removeIncome, addExpenses,
-    updateExpenseCategory, removeExpense, clearAllExpenses,
+    updateExpenseCategory, updateIncomeType, removeExpense, clearAllExpenses,
     setIncomes, setExpenses,
   } = useFinanceStore();
 
@@ -126,27 +126,29 @@ export default function Closure() {
     switch (currentStep) {
       case 1:
         return (
-          <IncomeForm
-            incomes={incomes}
-            incomeTypes={categoryStore.incomeTypes}
-            onAddIncome={addIncome}
-            onRemoveIncome={removeIncome}
-            onNext={() => setCurrentStep(2)}
-          />
-        );
-      case 2:
-        return (
           <CSVImport
             categories={categoryStore.categories}
             onImport={(exps) => addExpenses(autoCategorize(exps))}
             onImportIncomes={(newIncomes) => {
               newIncomes.forEach(inc => addIncome(inc));
             }}
-            onNext={() => setCurrentStep(3)}
-            onBack={() => setCurrentStep(1)}
+            onNext={() => setCurrentStep(2)}
+            onBack={() => {}}
             hasExpenses={expenses.length > 0}
             onClearExpenses={clearAllExpenses}
             expenseCount={expenses.length}
+          />
+        );
+      case 2:
+        return (
+          <IncomeForm
+            incomes={incomes}
+            incomeTypes={categoryStore.incomeTypes}
+            onAddIncome={addIncome}
+            onRemoveIncome={removeIncome}
+            onUpdateIncomeType={updateIncomeType}
+            onNext={() => setCurrentStep(3)}
+            onBack={() => setCurrentStep(1)}
           />
         );
       case 3:

@@ -130,7 +130,7 @@ export default function Home() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             {closures.map(closure => {
               const isComplete = closure.totalIncome > 0 && closure.totalExpenses > 0;
               return (
@@ -139,7 +139,7 @@ export default function Home() {
                 className="border-border/50 hover:border-primary/30 transition-colors cursor-pointer group"
                 onClick={() => navigate(`/closure/${closure.id}`)}
               >
-                <CardHeader className="pb-2">
+                <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <CardTitle className="text-lg capitalize">
@@ -197,31 +197,34 @@ export default function Home() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-3 gap-3 text-sm">
+                  <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-1 text-income">
-                        <TrendingUp className="h-3 w-3" />
+                      <div className="flex items-center gap-1.5 text-income">
+                        <TrendingUp className="h-4 w-4" />
                         <span className="text-xs text-muted-foreground">{t('dashboard.totalIncome')}</span>
                       </div>
-                      <p className="font-mono font-semibold text-income">
+                      <p className="font-mono font-bold text-lg text-income">
                         {formatCurrency(closure.totalIncome, language)}
                       </p>
                     </div>
                     <div className="space-y-1">
-                      <div className="flex items-center gap-1 text-expense">
-                        <TrendingDown className="h-3 w-3" />
+                      <div className="flex items-center gap-1.5 text-expense">
+                        <TrendingDown className="h-4 w-4" />
                         <span className="text-xs text-muted-foreground">{t('dashboard.totalExpenses')}</span>
                       </div>
-                      <p className="font-mono font-semibold text-expense">
+                      <p className="font-mono font-bold text-lg text-expense">
                         {formatCurrency(closure.totalExpenses, language)}
                       </p>
                     </div>
                     <div className="space-y-1">
-                      <div className="flex items-center gap-1 text-investment">
-                        <PiggyBank className="h-3 w-3" />
-                        <span className="text-xs text-muted-foreground">{t('dashboard.invested')}</span>
+                      <div className="flex items-center gap-1.5 text-investment">
+                        <PiggyBank className="h-4 w-4" />
+                        <span className="text-xs text-muted-foreground">{t('dashboard.netInvestment')}</span>
                       </div>
-                      <p className="font-mono font-semibold text-investment">
+                      <p className="font-mono font-bold text-lg text-investment">
+                        {formatCurrency(closure.totalInvestment, language)}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground font-mono">
                         {closure.investedPercentage.toFixed(1)}%
                       </p>
                     </div>

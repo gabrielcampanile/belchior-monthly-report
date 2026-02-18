@@ -117,6 +117,7 @@ export function useClosures() {
           source: i.source,
           type: i.type,
           amount: i.amount,
+          date: i.date || null,
         }))
       );
       if (incErr) throw incErr;
@@ -151,6 +152,7 @@ export function useClosures() {
       source: i.source,
       type: i.type as IncomeEntry['type'],
       amount: Number(i.amount),
+      date: (i as any).date || undefined,
     }));
 
     const expenses: ExpenseEntry[] = (expData || []).map(e => ({

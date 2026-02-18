@@ -39,6 +39,14 @@ export function useFinanceStore() {
     );
   }, []);
 
+  const updateIncomeType = useCallback((id: string, type: string) => {
+    setIncomes(prev =>
+      prev.map(income =>
+        income.id === id ? { ...income, type: type as any } : income
+      )
+    );
+  }, []);
+
   const removeExpense = useCallback((id: string) => {
     setExpenses(prev => prev.filter(e => e.id !== id));
   }, []);
@@ -84,6 +92,7 @@ export function useFinanceStore() {
     removeIncome,
     addExpenses,
     updateExpenseCategory,
+    updateIncomeType,
     removeExpense,
     clearAllExpenses,
     setIncomes,
