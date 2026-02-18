@@ -23,16 +23,20 @@ export function HistoryCharts({ closures }: HistoryChartsProps) {
     [closures]
   );
 
-  const chartData = useMemo(() =>
-    sortedClosures.map(c => ({
-      label: format(new Date(c.year, c.month - 1), 'MMM yy', { locale }),
-      income: c.totalIncome,
-      expenses: c.totalExpenses,
-      investment: c.totalInvestment,
-      investedPct: c.investedPercentage,
-    })),
-    [sortedClosures, locale]
-  );
+  const chartData = useMemo(() => {
+    let accumulated = 0;
+    return sortedClosures.map(c => {
+      accumulated += c.totalInvestment;
+      return {
+        label: format(new Date(c.year, c.month - 1), 'MMM yy', { locale }),
+        income: c.totalIncome,
+        expenses: c.totalExpenses,
+        investment: c.totalInvestment,
+        investedPct: c.investedPercentage,
+        patrimony: accumulated,
+      };
+    });
+  }, [sortedClosures, locale]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
@@ -121,6 +125,33 @@ export function HistoryCharts({ closures }: HistoryChartsProps) {
                 <Bar dataKey="income" name={t('dashboard.totalIncome')} fill="hsl(var(--income))" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="expenses" name={t('dashboard.totalExpenses')} fill="hsl(var(--expense))" radius={[4, 4, 0, 0]} />
               </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Patrimony Evolution */}
+      <Card className="border-border/50">
+        <CardHeader>
+          <CardTitle>{t('history.patrimonyEvolution')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={v => formatCurrency(v, language)} width={90} />
+                <Tooltip content={<CustomTooltip />} />
+                <Line
+                  type="monotone"
+                  dataKey="patrimony"
+                  name={t('history.patrimony')}
+                  stroke="hsl(var(--investment))"
+                  strokeWidth={2}
+                  dot={{ fill: 'hsl(var(--investment))', r: 4 }}
+                />
+              </LineChart>
             </ResponsiveContainer>
           </div>
         </CardContent>

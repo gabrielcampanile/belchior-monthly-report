@@ -56,6 +56,7 @@ const App = () => (
                 </AuthGuard>
               }
             />
+            {/* Investments page commented out for now
             <Route
               path="/investments"
               element={
@@ -64,6 +65,7 @@ const App = () => (
                 </AuthGuard>
               }
             />
+            */}
             <Route
               path="/settings"
               element={
