@@ -134,9 +134,13 @@ export default function Closure() {
             }}
             onNext={() => setCurrentStep(2)}
             onBack={() => {}}
-            hasExpenses={expenses.length > 0}
-            onClearExpenses={clearAllExpenses}
+            hasExpenses={expenses.length > 0 || incomes.length > 0}
+            onClearExpenses={() => {
+              clearAllExpenses();
+              setIncomes([]);
+            }}
             expenseCount={expenses.length}
+            incomeCount={incomes.length}
           />
         );
       case 2:
@@ -149,6 +153,9 @@ export default function Closure() {
             onUpdateIncomeType={updateIncomeType}
             onNext={() => setCurrentStep(3)}
             onBack={() => setCurrentStep(1)}
+            rules={rules}
+            onAddRule={addRule}
+            onRemoveRule={removeRule}
           />
         );
       case 3:
