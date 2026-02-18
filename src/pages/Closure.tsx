@@ -41,6 +41,7 @@ export default function Closure() {
     incomes, expenses, summary,
     addIncome, removeIncome, addExpenses,
     updateExpenseCategory, updateIncomeType, removeExpense, clearAllExpenses,
+    reorderExpenses, reorderIncomes,
     setIncomes, setExpenses,
   } = useFinanceStore();
 
@@ -156,6 +157,8 @@ export default function Closure() {
             rules={rules}
             onAddRule={addRule}
             onRemoveRule={removeRule}
+            getIncomeTypeColor={categoryStore.getIncomeTypeColor}
+            onReorder={reorderIncomes}
           />
         );
       case 3:
@@ -171,6 +174,8 @@ export default function Closure() {
             rules={rules}
             onAddRule={addRule}
             onRemoveRule={removeRule}
+            getCategoryColor={categoryStore.getCategoryColor}
+            onReorder={reorderExpenses}
           />
         );
       case 4:
