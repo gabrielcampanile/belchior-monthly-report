@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, DollarSign, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, DollarSign, ArrowRight, ArrowLeft, BookmarkPlus, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { IncomeEntry } from '@/types/finance';
 import { useApp } from '@/contexts/AppContext';
 import { formatCurrency } from '@/lib/currencyParser';
+import { CategorizationRule } from '@/hooks/useCategorizationRules';
 
 interface IncomeFormProps {
   incomes: IncomeEntry[];
@@ -16,16 +17,23 @@ interface IncomeFormProps {
   onUpdateIncomeType: (id: string, type: string) => void;
   onNext: () => void;
   onBack: () => void;
+  rules?: CategorizationRule[];
+  onAddRule?: (keyword: string, category: string) => Promise<void>;
+  onRemoveRule?: (id: string) => Promise<void>;
 }
 
-export function IncomeForm({ incomes, incomeTypes, onAddIncome, onRemoveIncome, onUpdateIncomeType, onNext, onBack }: IncomeFormProps) {
+export function IncomeForm({ incomes, incomeTypes, onAddIncome, onRemoveIncome, onUpdateIncomeType, onNext, onBack, rules = [], onAddRule, onRemoveRule }: IncomeFormProps) {
   const { language, t } = useApp();
   const [source, setSource] = useState('');
   const [type, setType] = useState<string>(incomeTypes[0] || 'Salary');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState('');
+  const [newKeyword, setNewKeyword] = useState('');
+  const [newRuleCategory, setNewRuleCategory] = useState(incomeTypes[0] || '');
+  const [showRules, setShowRules] = useState(false);
 
   const totalIncome = incomes.reduce((sum, i) => sum + i.amount, 0);
+  const categorizedCount = incomes.filter(i => i.type !== 'Other').length;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +54,23 @@ export function IncomeForm({ incomes, incomeTypes, onAddIncome, onRemoveIncome, 
     const translated = t(key);
     return translated !== key ? translated : incomeType;
   };
+
+  const handleAddRule = async () => {
+    if (!newKeyword.trim() || !onAddRule) return;
+    await onAddRule(newKeyword, newRuleCategory);
+    setNewKeyword('');
+  };
+
+  const handleSaveRuleFromIncome = async (description: string, type: string) => {
+    if (!onAddRule) return;
+    const keyword = description.trim().split(/\s+/)[0]?.toLowerCase();
+    if (keyword && keyword.length >= 3) {
+      await onAddRule(keyword, type);
+    }
+  };
+
+  // Filter rules that are income-type rules (match income types)
+  const incomeRules = rules.filter(r => incomeTypes.includes(r.category));
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -100,6 +125,90 @@ export function IncomeForm({ incomes, incomeTypes, onAddIncome, onRemoveIncome, 
         </CardContent>
       </Card>
 
+      {/* Stats Bar */}
+      <div className="grid grid-cols-3 gap-4">
+        <Card className="border-border/50">
+          <CardContent className="pt-4 text-center">
+            <p className="text-2xl font-bold font-mono text-income">
+              {formatCurrency(totalIncome, language)}
+            </p>
+            <p className="text-xs text-muted-foreground">{t('income.total')}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-border/50">
+          <CardContent className="pt-4 text-center">
+            <p className="text-2xl font-bold font-mono text-foreground">
+              {incomes.length}
+            </p>
+            <p className="text-xs text-muted-foreground">{t('categorize.count')}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-border/50">
+          <CardContent className="pt-4 text-center">
+            <p className="text-2xl font-bold font-mono text-primary">
+              {categorizedCount}/{incomes.length}
+            </p>
+            <p className="text-xs text-muted-foreground">{t('income.type')}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Auto-categorization Rules */}
+      {onAddRule && onRemoveRule && (
+        <Card className="border-primary/20">
+          <CardHeader className="cursor-pointer" onClick={() => setShowRules(!showRules)}>
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Sparkles className="w-4 h-4 text-primary" />
+              {t('rules.title')}
+              <span className="text-xs text-muted-foreground ml-auto">
+                {incomeRules.length} {t('rules.count')}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          {showRules && (
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input
+                  placeholder={t('rules.keywordPlaceholder')}
+                  value={newKeyword}
+                  onChange={(e) => setNewKeyword(e.target.value)}
+                  className="bg-secondary border-border text-sm"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddRule()}
+                />
+                <Select value={newRuleCategory} onValueChange={setNewRuleCategory}>
+                  <SelectTrigger className="w-[160px] bg-secondary border-border text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border-border">
+                    {incomeTypes.map(cat => (
+                      <SelectItem key={cat} value={cat}>
+                        {getTranslatedType(cat)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button size="sm" onClick={handleAddRule} disabled={!newKeyword.trim()}>
+                  <BookmarkPlus className="w-4 h-4" />
+                </Button>
+              </div>
+              {incomeRules.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {incomeRules.map(rule => (
+                    <div key={rule.id} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary text-xs border border-border">
+                      <span className="font-medium">{rule.keyword}</span>
+                      <span className="text-muted-foreground">→ {getTranslatedType(rule.category)}</span>
+                      <button onClick={() => onRemoveRule(rule.id)} className="ml-1 text-muted-foreground hover:text-destructive">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          )}
+        </Card>
+      )}
+
       {/* Income Table */}
       <Card className="border-border/50">
         <CardHeader>
@@ -108,7 +217,7 @@ export function IncomeForm({ incomes, incomeTypes, onAddIncome, onRemoveIncome, 
             {t('income.entries')}
           </CardTitle>
           <CardDescription>
-            {incomes.length === 0 ? t('income.noEntries') : `${incomes.length} ${incomes.length === 1 ? 'entry' : 'entries'}`}
+            {incomes.length === 0 ? t('income.noEntries') : `${incomes.length} ${t('import.transactions')}`}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -127,7 +236,7 @@ export function IncomeForm({ incomes, incomeTypes, onAddIncome, onRemoveIncome, 
                       <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">{t('categorize.description')}</th>
                       <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">{t('income.type')}</th>
                       <th className="text-right py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">{t('categorize.amount')}</th>
-                      <th className="w-12"></th>
+                      <th className="w-20"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -150,7 +259,18 @@ export function IncomeForm({ incomes, incomeTypes, onAddIncome, onRemoveIncome, 
                         <td className="py-3 px-2 text-sm font-mono font-medium text-income text-right whitespace-nowrap">
                           {formatCurrency(income.amount, language)}
                         </td>
-                        <td className="py-3 px-2">
+                        <td className="py-3 px-2 flex items-center gap-1">
+                          {income.type !== 'Other' && onAddRule && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title={t('rules.saveRule')}
+                              onClick={() => handleSaveRuleFromIncome(income.source, income.type)}
+                              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-primary hover:text-primary hover:bg-primary/10"
+                            >
+                              <BookmarkPlus className="w-4 h-4" />
+                            </Button>
+                          )}
                           <Button variant="ghost" size="icon" onClick={() => onRemoveIncome(income.id)} className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10">
                             <Trash2 className="w-4 h-4" />
                           </Button>

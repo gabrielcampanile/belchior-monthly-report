@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Upload, FileSpreadsheet, ArrowRight, AlertCircle, X, CreditCard, Building2, FileText, DollarSign, Tags, BarChart3 } from 'lucide-react';
+import { Upload, FileSpreadsheet, ArrowRight, AlertCircle, X, CreditCard, Building2, FileText, DollarSign, Tags, BarChart3, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -19,9 +19,10 @@ interface CSVImportProps {
   hasExpenses: boolean;
   onClearExpenses: () => void;
   expenseCount: number;
+  incomeCount?: number;
 }
 
-export function CSVImport({ categories, onImport, onImportIncomes, onNext, onBack, hasExpenses, onClearExpenses, expenseCount }: CSVImportProps) {
+export function CSVImport({ categories, onImport, onImportIncomes, onNext, onBack, hasExpenses, onClearExpenses, expenseCount, incomeCount = 0 }: CSVImportProps) {
   const { language, t } = useApp();
   const [csvData, setCsvData] = useState<string[][]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
@@ -146,6 +147,7 @@ export function CSVImport({ categories, onImport, onImportIncomes, onNext, onBac
           });
         } else {
           incomes.push({
+            date: r.date,
             source: r.description,
             type: 'Other',
             amount: r.rawAmount,
@@ -157,7 +159,8 @@ export function CSVImport({ categories, onImport, onImportIncomes, onNext, onBac
       if (incomes.length > 0 && onImportIncomes) onImportIncomes(incomes);
     }
 
-    // Don't auto-advance, let user import more files or proceed manually
+    // Clear file after import so user can import another
+    clearFile();
   };
 
   const clearFile = () => {
@@ -166,7 +169,12 @@ export function CSVImport({ categories, onImport, onImportIncomes, onNext, onBac
     setMapping({ date: '', description: '', amount: '' });
     setFileName(null);
     setError(null);
+    // Reset file input
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
   };
+
+  const totalImported = expenseCount + incomeCount;
 
   const previewRows = csvData.slice(0, 5).map(row => {
     if (!mapping.date || !mapping.description || !mapping.amount) return null;
@@ -452,12 +460,22 @@ export function CSVImport({ categories, onImport, onImportIncomes, onNext, onBac
       </Card>
 
       {/* Imported status */}
-      {hasExpenses && (
+      {totalImported > 0 && (
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="pt-4 flex items-center justify-between">
-            <span className="text-sm font-medium text-foreground">
-              ✓ {expenseCount} {t('import.expensesImported')}
-            </span>
+            <div className="flex items-center gap-3">
+              <Check className="w-5 h-5 text-primary" />
+              <div className="text-sm">
+                <span className="font-medium text-foreground">
+                  {totalImported} {t('import.expensesImported')}
+                </span>
+                {expenseCount > 0 && incomeCount > 0 && (
+                  <span className="text-muted-foreground ml-2">
+                    ({expenseCount} {t('import.expenseLabel')} + {incomeCount} {t('import.incomeLabel')})
+                  </span>
+                )}
+              </div>
+            </div>
             <Button
               variant="ghost"
               size="sm"
