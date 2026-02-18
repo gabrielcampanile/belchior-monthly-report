@@ -1,171 +1,120 @@
+# Reestruturação do Fluxo e Melhorias de UX
 
-# Plano: Evoluir para SaaS de Planejamento Financeiro
+## 1. Reordenar o Wizard (Import primeiro)
 
-## Resumo
+O fluxo atual e 1.Renda -> 2.Import -> 3.Categorizar -> 4.Resumo. O novo fluxo sera:
 
-Transformar a ferramenta de sessao unica em um SaaS completo com:
-- Login com Google (Supabase Auth)
-- Banco de dados para salvar fechamentos mensais
-- Historico mes a mes com balanco anual/semestral
-- Suporte a extrato bancario (entradas + saidas pelo sinal do valor)
-- Auto-categorizacao por regras de palavras-chave
-- Dashboard historico multi-periodo
+1. **Import** (CSV upload -- ponto de entrada principal)
+2. **Renda** (visualizar/editar/categorizar rendas importadas + adicionar manualmente)
+3. **Despesas** (visualizar/editar/categorizar despesas -- antigo "Categorize" + adicionar manualmente)
+4. **Resumo** (Dashboard)
 
----
-
-## Fase 1: Infraestrutura (Supabase + Auth)
-
-### 1.1 Habilitar Lovable Cloud
-- Ativar Supabase integrado para ter banco de dados e autenticacao
-
-### 1.2 Login com Google
-- Configurar provider Google no Supabase Dashboard
-- Criar pagina de login (`/auth`) com botao "Entrar com Google"
-- Criar tabela `profiles` com trigger para auto-criar perfil no signup
-- Adicionar rota protegida - redirecionar para `/auth` se nao logado
-- Adicionar botao de logout no Header
-
-### 1.3 Esquema do Banco de Dados
-
-```text
-profiles
-  - id (uuid, FK auth.users)
-  - display_name (text)
-  - created_at (timestamp)
-
-monthly_closures
-  - id (uuid, PK)
-  - user_id (uuid, FK auth.users)
-  - month (integer, 1-12)
-  - year (integer)
-  - total_income (numeric)
-  - total_expenses (numeric)
-  - total_investment (numeric)
-  - spent_percentage (numeric)
-  - invested_percentage (numeric)
-  - created_at (timestamp)
-  - UNIQUE(user_id, month, year)
-
-closure_incomes
-  - id (uuid, PK)
-  - closure_id (uuid, FK monthly_closures)
-  - source (text)
-  - type (text)
-  - amount (numeric)
-
-closure_expenses
-  - id (uuid, PK)
-  - closure_id (uuid, FK monthly_closures)
-  - date (text)
-  - description (text)
-  - amount (numeric)
-  - category (text)
-
-user_categories
-  - id (uuid, PK)
-  - user_id (uuid, FK auth.users)
-  - name (text)
-  - type (text: 'expense' | 'income')
-
-categorization_rules
-  - id (uuid, PK)
-  - user_id (uuid, FK auth.users)
-  - keyword (text)
-  - category (text)
-```
-
-RLS: cada tabela com politica `user_id = auth.uid()` (ou via closure_id para sub-tabelas).
+Alteracoes em `src/pages/Closure.tsx`: reordenar o array STEPS e ajustar o `renderStep()`.
 
 ---
 
-## Fase 2: Fluxo Principal Atualizado
+## 2. Rendas: permitir data, categorização e edição
 
-### 2.1 Selecao de Mes/Ano
-- Ao entrar, usuario escolhe o mes/ano para fechar (ou continuar um fechamento existente)
-- Se ja existe fechamento para aquele mes, carrega os dados salvos
-- Lista de fechamentos anteriores visivel na pagina inicial
+Atualmente `IncomeEntry` so tem `source`, `type`, `amount`. Precisa adicionar `date` ao tipo.
 
-### 2.2 Suporte a Extrato Bancario
-- Na tela de importacao CSV, adicionar opcao: "Tipo de arquivo"
-  - **Fatura de cartao de credito**: tudo e despesa (comportamento atual)
-  - **Extrato bancario**: valores positivos = receita, negativos = despesa
-- Quando extrato bancario: valores positivos sao adicionados automaticamente como receita, negativos como despesa
-
-### 2.3 Auto-categorizacao por Palavras-chave
-- Tabela `categorization_rules` com pares keyword/categoria por usuario
-- Regras padrao pre-carregadas (ex: "uber" -> Transporte, "ifood" -> Alimentacao, "netflix" -> Assinaturas, "mercado"/"supermercado" -> Alimentacao, etc.)
-- Ao importar CSV, cada descricao e comparada com as regras; se match, categoria e sugerida automaticamente
-- Usuario pode adicionar/editar regras na tela de Settings
-- Categorias sem match ficam como "Other" para categorizacao manual
-
-### 2.4 Salvar Fechamento
-- Botao "Salvar Fechamento" no Dashboard (alem do Export PDF)
-- Salva todos os dados (receitas, despesas categorizadas, resumo) no banco
-- Se fechamento do mesmo mes ja existe, pergunta se quer sobrescrever
+- `**src/types/finance.ts**`: adicionar campo `date?: string` em `IncomeEntry`.
+- `**src/components/IncomeForm.tsx**`: transformar no mesmo estilo da tabela de despesas -- exibir tabela com colunas data, descricao, tipo (com select editavel), valor, e acoes (remover). Incluir formulario manual para adicionar.
+- `**src/hooks/useFinanceStore.ts**`: adicionar `updateIncomeType(id, type)` para editar o tipo de renda inline.
+- **DB `closure_incomes**`: adicionar coluna `date` (text, nullable) via migracao.
 
 ---
 
-## Fase 3: Historico e Balancos
+## 3. Salvar categorias customizadas no banco
 
-### 3.1 Pagina de Historico (`/history`)
-- Lista todos os fechamentos salvos, ordenados por data
-- Cards com resumo rapido (receita, despesa, investimento)
-- Click para ver detalhes de qualquer mes
+Atualmente `useCategoryStore` usa apenas `useState` local. Precisamos persistir no banco.
 
-### 3.2 Balancos Multi-Periodo
-- Na pagina de historico, filtros de periodo: mensal, bimestral, trimestral, semestral, anual
-- Graficos de evolucao: linha do tempo de receita vs despesa vs investimento
-- Media de gastos por categoria ao longo do periodo selecionado
-- Comparativo mes a mes (quanto gastou mais/menos que o mes anterior)
+- **Migracao SQL**: criar tabela `user_categories` com colunas `id`, `user_id`, `name`, `type` ('expense' | 'income'), `created_at`, com RLS por user_id.
+- `**src/hooks/useCategoryStore.ts**`: refatorar para carregar categorias do banco ao inicializar e salvar/remover via Supabase, mantendo os defaults como fallback.
 
 ---
 
-## Fase 4: Navegacao e UX
+## 4. Bug: duas bolinhas de cor na categorização de despesas
 
-### 4.1 Nova Estrutura de Rotas
-- `/auth` - Login com Google
-- `/` - Pagina inicial (lista de fechamentos + botao "Novo Fechamento")
-- `/closure/:id` ou `/closure/new?month=X&year=Y` - Fluxo de fechamento (steps 1-4)
-- `/history` - Historico e balancos
+No `ExpenseCategorization.tsx` linha 202-205, o `SelectTrigger` ja mostra uma bolinha, e o `SelectItem` (linhas 210-213) tambem mostra outra. Quando o valor selecionado e renderizado no trigger, ele usa o conteudo do SelectItem (que tem bolinha) dentro do trigger (que tambem tem bolinha).
 
-### 4.2 Atualizacoes no Header
-- Mostrar nome/avatar do usuario
-- Navegacao: Inicio, Historico, Configuracoes
-- Botao de logout
+**Fix**: remover a bolinha do `SelectTrigger` (linhas 203-204) OU remover a bolinha dos `SelectItem`. A solucao mais limpa e manter a bolinha apenas no `SelectValue` customizado e remover do trigger wrapper.
+
+---
+
+## 5. Cards de fechamento maiores na Home
+
+Os cards atuais (`Home.tsx`) usam `grid-cols-3` com conteudo comprimido. Alteracoes:
+
+- Mudar grid para `md:grid-cols-2` (maximo 2 colunas) para cards maiores.
+- Aumentar o padding e tamanho da fonte dos valores.
+- Foco principal: mostrar **Receita**, **Despesa** e **Valor Investido** (nao percentual). Trocar `investedPercentage` por `totalInvestment` no card (usando `formatCurrency`).
+- Manter percentual como informacao secundaria menor.
+
+---
+
+## 6. Historia: maior enfase no valor investido
+
+- `**PeriodSummaryCards.tsx**`: ja mostra `totalInvestment` -- ok. Garantir destaque visual.
+- `**HistoryCharts.tsx**`: adicionar grafico dedicado de evolucao do valor investido (alem do percentual que ja existe). O grafico de linhas principal ja inclui investment, mas podemos dar mais destaque.
+- `**History.tsx` tabela**: mostrar coluna "Investido (valor)" alem da coluna "Investido (%)" que ja existe.
+
+---
+
+## 7. Area logada de usuario (pagina de configuracoes)
+
+Criar uma pagina `/settings` dedicada em vez de depender apenas do modal pequeno:
+
+- `**src/pages/Settings.tsx**`: pagina completa com secoes:
+  - Perfil (nome, avatar)
+  - Categorias de despesa (gerenciar)
+  - Tipos de renda (gerenciar)
+  - Preferencias (idioma, alto contraste)
+- `**src/App.tsx**`: adicionar rota `/settings` protegida.
+- `**src/components/Header.tsx**`: trocar o icone de settings (que abre modal) por link para `/settings`. Ou manter ambos, com o avatar/nome clicavel levando a `/settings`.
+- `**src/components/SettingsDialog.tsx**`: pode ser removido ou mantido como atalho. O modal atual (`sm:max-w-[500px]`) e muito pequeno -- a pagina dedicada resolve isso.
 
 ---
 
 ## Detalhes Tecnicos
 
-### Arquivos Novos
-- `src/pages/Auth.tsx` - Pagina de login
-- `src/pages/Home.tsx` - Lista de fechamentos
-- `src/pages/History.tsx` - Historico e balancos
-- `src/pages/Closure.tsx` - Fluxo de fechamento (substitui Index.tsx atual)
-- `src/hooks/useAuth.ts` - Hook de autenticacao
-- `src/components/ClosureList.tsx` - Lista de fechamentos
-- `src/components/PeriodSelector.tsx` - Seletor de periodo para balancos
-- `src/components/HistoryCharts.tsx` - Graficos de evolucao
-- `src/components/AutoCategorizer.tsx` - Configuracao de regras de auto-categorizacao
-- `src/integrations/supabase/` - Client e tipos gerados
-- Migracoes SQL para todas as tabelas + RLS
+### Migracao SQL
 
-### Arquivos Modificados
-- `src/App.tsx` - Novas rotas + auth guard
-- `src/components/Header.tsx` - Navegacao, avatar, logout
-- `src/components/CSVImport.tsx` - Opcao extrato bancario + auto-categorizacao
-- `src/components/Dashboard.tsx` - Botao "Salvar Fechamento"
-- `src/components/SettingsDialog.tsx` - Regras de auto-categorizacao
-- `src/hooks/useFinanceStore.ts` - Carregar/salvar do banco
-- `src/contexts/AppContext.tsx` - Novas traducoes
-- `src/pages/Index.tsx` - Redirecionar para Home
+```sql
+-- Adicionar coluna date em closure_incomes
+ALTER TABLE closure_incomes ADD COLUMN IF NOT EXISTS date text;
 
-### Ordem de Implementacao
-1. Habilitar Lovable Cloud + Supabase
-2. Criar tabelas e RLS (migracoes)
-3. Auth com Google + pagina de login + profiles
-4. Adaptar fluxo de fechamento para salvar no banco
-5. Pagina Home com lista de fechamentos
-6. Extrato bancario (receita/despesa pelo sinal)
-7. Auto-categorizacao por regras
-8. Pagina de historico com balancos multi-periodo
+-- Tabela de categorias customizadas do usuario
+CREATE TABLE user_categories (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  name text NOT NULL,
+  type text NOT NULL CHECK (type IN ('expense', 'income')),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(user_id, name, type)
+);
+
+ALTER TABLE user_categories ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own categories" ON user_categories FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own categories" ON user_categories FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can delete own categories" ON user_categories FOR DELETE USING (auth.uid() = user_id);
+```
+
+### Arquivos a criar
+
+- `src/pages/Settings.tsx`
+
+### Arquivos a modificar
+
+- `src/types/finance.ts` (date em IncomeEntry)
+- `src/hooks/useFinanceStore.ts` (updateIncomeType)
+- `src/hooks/useCategoryStore.ts` (persistencia no banco)
+- `src/components/IncomeForm.tsx` (tabela editavel com data e tipo)
+- `src/components/ExpenseCategorization.tsx` (fix bolinha duplicada)
+- `src/pages/Closure.tsx` (reordenar steps)
+- `src/pages/Home.tsx` (cards maiores, valor investido)
+- `src/pages/History.tsx` (coluna valor investido)
+- `src/components/HistoryCharts.tsx` (grafico valor investido)
+- `src/components/Header.tsx` (link para /settings)
+- `src/App.tsx` (rota /settings)
+- `src/contexts/AppContext.tsx` (novas traducoes)
