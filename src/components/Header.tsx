@@ -1,4 +1,4 @@
-import { Calculator, LogOut, Home, BarChart3, Settings } from 'lucide-react';
+import { Calculator, LogOut, Home, BarChart3, Settings, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -86,6 +86,15 @@ export function Header({
           >
             <BarChart3 className="h-4 w-4" />
             {t('nav.history')}
+          </Button>
+          <Button
+            variant={location.pathname === '/investments' ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => navigate('/investments')}
+            className="gap-1.5"
+          >
+            <TrendingUp className="h-4 w-4" />
+            {t('nav.investments')}
           </Button>
           <Button
             variant={location.pathname === '/settings' ? 'secondary' : 'ghost'}

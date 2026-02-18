@@ -108,6 +108,39 @@ export type Database = {
           },
         ]
       }
+      investment_snapshots: {
+        Row: {
+          balance: number
+          contribution: number
+          created_at: string
+          id: string
+          month: number
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          balance?: number
+          contribution?: number
+          created_at?: string
+          id?: string
+          month: number
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          balance?: number
+          contribution?: number
+          created_at?: string
+          id?: string
+          month?: number
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
       monthly_closures: {
         Row: {
           created_at: string
