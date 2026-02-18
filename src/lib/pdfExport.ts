@@ -129,6 +129,9 @@ export function generatePDFReport(
     );
   }
 
-  const fileName = `relatorio-${periodLabel.toLowerCase().replace(/\s+/g, '-')}.pdf`;
+  const monthStr = String(month).padStart(2, '0');
+  const fileName = language === 'pt'
+    ? `relatorio-${monthStr}-${year}.pdf`
+    : `report-${monthStr}-${year}.pdf`;
   doc.save(fileName);
 }

@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, PiggyBank, Percent, FileDown, ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, PiggyBank, Percent, FileDown, ArrowLeft } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,11 +10,9 @@ interface DashboardProps {
   summary: FinancialSummary;
   onExportPDF: () => void;
   onBack: () => void;
-  onSave?: () => void;
-  saving?: boolean;
 }
 
-export function Dashboard({ summary, onExportPDF, onBack, onSave, saving }: DashboardProps) {
+export function Dashboard({ summary, onExportPDF, onBack }: DashboardProps) {
   const { language, t } = useApp();
 
   const getTranslatedCategory = (category: string) => {
@@ -263,18 +261,10 @@ export function Dashboard({ summary, onExportPDF, onBack, onSave, saving }: Dash
           <ArrowLeft className="w-4 h-4" />
           {t('dashboard.back')}
         </Button>
-        <div className="flex gap-3">
-          {onSave && (
-            <Button onClick={onSave} variant="default" size="lg" disabled={saving}>
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {t('dashboard.save')}
-            </Button>
-          )}
-          <Button onClick={onExportPDF} variant="glow" size="lg">
-            <FileDown className="w-4 h-4" />
-            {t('dashboard.exportPDF')}
-          </Button>
-        </div>
+        <Button onClick={onExportPDF} variant="default" size="lg">
+          <FileDown className="w-4 h-4" />
+          {t('dashboard.exportPDF')}
+        </Button>
       </div>
     </div>
   );

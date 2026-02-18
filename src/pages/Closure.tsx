@@ -13,7 +13,7 @@ import { useCategorizationRules } from '@/hooks/useCategorizationRules';
 import { generatePDFReport } from '@/lib/pdfExport';
 import { toast } from '@/hooks/use-toast';
 import { useApp } from '@/contexts/AppContext';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const STEPS = [
@@ -31,6 +31,7 @@ export default function Closure() {
   const [currentStep, setCurrentStep] = useState(1);
   const [loadingData, setLoadingData] = useState(!!id);
   const [saving, setSaving] = useState(false);
+  const [autoSaveTimer, setAutoSaveTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   const month = id ? 0 : Number(searchParams.get('month') || new Date().getMonth() + 1);
   const year = id ? 0 : Number(searchParams.get('year') || new Date().getFullYear());
@@ -78,13 +79,10 @@ export default function Closure() {
   }, [id, loadClosure, setIncomes, setExpenses, t]);
 
   const handleSave = async () => {
+    if (saving) return;
     setSaving(true);
     try {
       await saveClosure(closureMonth, closureYear, incomes, expenses, summary);
-      toast({
-        title: t('home.savedTitle'),
-        description: t('home.savedDesc'),
-      });
     } catch (err: any) {
       toast({
         title: t('auth.error'),
@@ -95,6 +93,21 @@ export default function Closure() {
       setSaving(false);
     }
   };
+
+  // Auto-save when data changes (debounced)
+  useEffect(() => {
+    if (loadingData || (!incomes.length && !expenses.length)) return;
+    if (!closureMonth || !closureYear) return;
+
+    if (autoSaveTimer) clearTimeout(autoSaveTimer);
+    const timer = setTimeout(() => {
+      handleSave();
+    }, 2000);
+    setAutoSaveTimer(timer);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incomes, expenses, closureMonth, closureYear]);
 
   const handleExportPDF = () => {
     try {
@@ -184,8 +197,6 @@ export default function Closure() {
             summary={summary}
             onExportPDF={handleExportPDF}
             onBack={() => setCurrentStep(3)}
-            onSave={handleSave}
-            saving={saving}
           />
         );
       default:
