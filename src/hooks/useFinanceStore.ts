@@ -55,6 +55,24 @@ export function useFinanceStore() {
     setExpenses([]);
   }, []);
 
+  const reorderExpenses = useCallback((fromIndex: number, toIndex: number) => {
+    setExpenses(prev => {
+      const result = [...prev];
+      const [removed] = result.splice(fromIndex, 1);
+      result.splice(toIndex, 0, removed);
+      return result;
+    });
+  }, []);
+
+  const reorderIncomes = useCallback((fromIndex: number, toIndex: number) => {
+    setIncomes(prev => {
+      const result = [...prev];
+      const [removed] = result.splice(fromIndex, 1);
+      result.splice(toIndex, 0, removed);
+      return result;
+    });
+  }, []);
+
   const summary: FinancialSummary = useMemo(() => {
     const totalIncome = incomes.reduce((sum, i) => sum + i.amount, 0);
     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
@@ -95,6 +113,8 @@ export function useFinanceStore() {
     updateIncomeType,
     removeExpense,
     clearAllExpenses,
+    reorderExpenses,
+    reorderIncomes,
     setIncomes,
     setExpenses,
   };

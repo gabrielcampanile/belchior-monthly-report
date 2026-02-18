@@ -208,24 +208,30 @@ export type Database = {
         Row: {
           color: string | null
           created_at: string
+          display_name: string | null
           id: string
           name: string
+          sort_order: number | null
           type: string
           user_id: string
         }
         Insert: {
           color?: string | null
           created_at?: string
+          display_name?: string | null
           id?: string
           name: string
+          sort_order?: number | null
           type: string
           user_id: string
         }
         Update: {
           color?: string | null
           created_at?: string
+          display_name?: string | null
           id?: string
           name?: string
+          sort_order?: number | null
           type?: string
           user_id?: string
         }
