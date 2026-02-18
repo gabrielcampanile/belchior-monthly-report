@@ -192,6 +192,8 @@ const translations: Record<Language, Record<string, string>> = {
     'history.avgInvested': 'Avg. Invested',
     'history.avg': 'Avg',
     'history.months': 'months',
+    'history.patrimony': 'Net Worth',
+    'history.patrimonyEvolution': 'Net Worth Evolution',
 
     // Nav
     'nav.home': 'Home',
@@ -429,6 +431,8 @@ const translations: Record<Language, Record<string, string>> = {
     'history.avgInvested': 'Média Investida',
     'history.avg': 'Média',
     'history.months': 'meses',
+    'history.patrimony': 'Patrimônio',
+    'history.patrimonyEvolution': 'Evolução do Patrimônio',
 
     // Nav
     'nav.home': 'Início',

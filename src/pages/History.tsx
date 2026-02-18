@@ -63,13 +63,16 @@ export default function History() {
     const sorted = [...filteredClosures].sort((a, b) =>
       a.year !== b.year ? a.year - b.year : a.month - b.month
     );
+    let accumulated = 0;
     return sorted.map((c, i) => {
       const prev = i > 0 ? sorted[i - 1] : null;
+      accumulated += c.totalInvestment;
       return {
         ...c,
         incomeDiff: prev ? c.totalIncome - prev.totalIncome : 0,
         expenseDiff: prev ? c.totalExpenses - prev.totalExpenses : 0,
         hasPrev: !!prev,
+        patrimony: accumulated,
       };
     });
   }, [filteredClosures]);
@@ -172,6 +175,7 @@ export default function History() {
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t('dashboard.totalExpenses')}</th>
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t('history.expenseChange')}</th>
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t('dashboard.netInvestment')}</th>
+                        <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t('history.patrimony')}</th>
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t('dashboard.invested')}</th>
                       </tr>
                     </thead>
@@ -211,6 +215,9 @@ export default function History() {
                           </td>
                           <td className="px-4 py-3 text-right font-mono font-semibold text-investment">
                             {formatCurrency(c.totalInvestment, language)}
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono font-semibold text-primary">
+                            {formatCurrency(c.patrimony, language)}
                           </td>
                           <td className="px-4 py-3 text-right font-mono text-muted-foreground">
                             {c.investedPercentage.toFixed(1)}%

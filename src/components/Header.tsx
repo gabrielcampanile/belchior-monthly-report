@@ -87,6 +87,7 @@ export function Header({
             <BarChart3 className="h-4 w-4" />
             {t('nav.history')}
           </Button>
+          {/* Investment page commented out for now
           <Button
             variant={location.pathname === '/investments' ? 'secondary' : 'ghost'}
             size="sm"
@@ -96,6 +97,7 @@ export function Header({
             <TrendingUp className="h-4 w-4" />
             {t('nav.investments')}
           </Button>
+          */}
           <Button
             variant={location.pathname === '/settings' ? 'secondary' : 'ghost'}
             size="sm"
