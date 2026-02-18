@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Plus, Trash2, Tag, ArrowRight, BarChart3, ArrowLeft, BookmarkPlus, Sparkles, X } from 'lucide-react';
+import { useTableSort } from '@/hooks/useTableSort';
+import { SortableColumnHeader } from '@/components/SortableColumnHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -52,6 +54,7 @@ export function ExpenseCategorization({
   const [manualCategory, setManualCategory] = useState<string>(categories[0] || 'Other');
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const { sortedItems: sortedExpenses, sortConfig, toggleSort } = useTableSort(expenses);
 
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const categorizedCount = expenses.filter(e => e.category !== 'Other').length;
@@ -242,16 +245,16 @@ export function ExpenseCategorization({
                     <thead>
                       <tr className="border-b border-border">
                         <th className="w-8"></th>
-                        <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">{t('categorize.date')}</th>
-                        <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">{t('categorize.description')}</th>
-                        <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">{t('categorize.category')}</th>
-                        <th className="text-right py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">{t('categorize.amount')}</th>
+                        <SortableColumnHeader label={t('categorize.date')} sortKey="date" currentKey={sortConfig.key} direction={sortConfig.direction} onSort={toggleSort} />
+                        <SortableColumnHeader label={t('categorize.description')} sortKey="description" currentKey={sortConfig.key} direction={sortConfig.direction} onSort={toggleSort} />
+                        <SortableColumnHeader label={t('categorize.category')} sortKey="category" currentKey={sortConfig.key} direction={sortConfig.direction} onSort={toggleSort} />
+                        <SortableColumnHeader label={t('categorize.amount')} sortKey="amount" currentKey={sortConfig.key} direction={sortConfig.direction} onSort={toggleSort} align="right" />
                         <th className="w-20"></th>
                       </tr>
                     </thead>
-                    <SortableContext items={expenses.map(e => e.id)} strategy={verticalListSortingStrategy}>
+                    <SortableContext items={sortedExpenses.map(e => e.id)} strategy={verticalListSortingStrategy}>
                       <tbody className="divide-y divide-border">
-                        {expenses.map((expense) => (
+                        {sortedExpenses.map((expense) => (
                           <SortableItem key={expense.id} id={expense.id} as="tr">
                             <td className="py-3 px-2 text-sm text-muted-foreground whitespace-nowrap">{expense.date}</td>
                             <td className="py-3 px-2 text-sm text-foreground max-w-[200px] truncate">{expense.description}</td>
