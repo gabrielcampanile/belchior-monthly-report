@@ -200,10 +200,7 @@ export function ExpenseCategorization({
                           onValueChange={(v) => onUpdateCategory(expense.id, v)}
                         >
                           <SelectTrigger className="w-[180px] h-8 text-xs bg-secondary border-border">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getCategoryColor(expense.category) }} />
-                              <SelectValue />
-                            </div>
+                            <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-popover border-border">
                             {categories.map((cat) => (

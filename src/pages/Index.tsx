@@ -30,6 +30,7 @@ const Index = () => {
     removeIncome,
     addExpenses,
     updateExpenseCategory,
+    updateIncomeType,
     removeExpense,
     clearAllExpenses,
   } = useFinanceStore();
@@ -75,7 +76,9 @@ const Index = () => {
             incomeTypes={incomeTypes}
             onAddIncome={addIncome}
             onRemoveIncome={removeIncome}
+            onUpdateIncomeType={updateIncomeType}
             onNext={() => setCurrentStep(2)}
+            onBack={() => {}}
           />
         );
       case 2:

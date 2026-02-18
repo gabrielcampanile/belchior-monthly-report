@@ -1,9 +1,9 @@
-import { Calculator, LogOut, Home, BarChart3 } from 'lucide-react';
+import { Calculator, LogOut, Home, BarChart3, Settings } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
-import { SettingsDialog } from '@/components/SettingsDialog';
+// Settings page replaces the dialog
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -87,6 +87,15 @@ export function Header({
             <BarChart3 className="h-4 w-4" />
             {t('nav.history')}
           </Button>
+          <Button
+            variant={location.pathname === '/settings' ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => navigate('/settings')}
+            className="gap-1.5"
+          >
+            <Settings className="h-4 w-4" />
+            {t('nav.settings')}
+          </Button>
         </nav>
         </div>
         
@@ -96,16 +105,7 @@ export function Header({
             <p className="text-xs text-muted-foreground">{t('app.currentPeriod')}</p>
           </div>
 
-          <SettingsDialog
-            categories={categories}
-            incomeTypes={incomeTypes}
-            onAddCategory={onAddCategory}
-            onRemoveCategory={onRemoveCategory}
-            onAddIncomeType={onAddIncomeType}
-            onRemoveIncomeType={onRemoveIncomeType}
-            isDefaultCategory={isDefaultCategory}
-            isDefaultIncomeType={isDefaultIncomeType}
-          />
+          {/* Removed SettingsDialog - now using /settings page */}
 
           {user && (
             <div className="flex items-center gap-2">

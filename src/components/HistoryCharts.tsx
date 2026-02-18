@@ -126,6 +126,26 @@ export function HistoryCharts({ closures }: HistoryChartsProps) {
         </CardContent>
       </Card>
 
+      {/* Investment Value Evolution */}
+      <Card className="border-border/50">
+        <CardHeader>
+          <CardTitle>{t('history.investmentValueEvolution')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={v => formatCurrency(v, language)} width={90} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="investment" name={t('dashboard.netInvestment')} fill="hsl(var(--investment))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Investment % Evolution */}
       <Card className="border-border/50">
         <CardHeader>

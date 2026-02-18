@@ -165,6 +165,7 @@ const translations: Record<Language, Record<string, string>> = {
     'history.evolution': 'Income vs Expenses Evolution',
     'history.comparison': 'Monthly Comparison',
     'history.investmentEvolution': 'Investment % Evolution',
+    'history.investmentValueEvolution': 'Investment Value Evolution',
     'history.monthComparison': 'Month-over-Month',
     'history.period': 'Period',
     'history.incomeChange': 'Income Δ',
@@ -182,8 +183,12 @@ const translations: Record<Language, Record<string, string>> = {
     // Nav
     'nav.home': 'Home',
     'nav.history': 'History',
+    'nav.settings': 'Settings',
 
     // Settings
+    'settings.pageTitle': 'Settings',
+    'settings.profile': 'Profile',
+    'settings.preferences': 'Preferences',
     'settings.manageIncomeTypes': 'Manage Income Types',
     'settings.manageCategories': 'Manage Categories',
     'settings.language': 'Language',
@@ -365,6 +370,7 @@ const translations: Record<Language, Record<string, string>> = {
     'history.evolution': 'Evolução Receita vs Despesas',
     'history.comparison': 'Comparativo Mensal',
     'history.investmentEvolution': 'Evolução % Investido',
+    'history.investmentValueEvolution': 'Evolução Valor Investido',
     'history.monthComparison': 'Mês a Mês',
     'history.period': 'Período',
     'history.incomeChange': 'Renda Δ',
@@ -382,9 +388,13 @@ const translations: Record<Language, Record<string, string>> = {
     // Nav
     'nav.home': 'Início',
     'nav.history': 'Histórico',
+    'nav.settings': 'Configurações',
 
     
     // Settings
+    'settings.pageTitle': 'Configurações',
+    'settings.profile': 'Perfil',
+    'settings.preferences': 'Preferências',
     'settings.manageIncomeTypes': 'Gerenciar Tipos de Renda',
     'settings.manageCategories': 'Gerenciar Categorias',
     'settings.language': 'Idioma',
