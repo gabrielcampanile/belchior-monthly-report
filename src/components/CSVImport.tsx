@@ -1,14 +1,12 @@
 import { useState, useCallback } from 'react';
-import { Upload, FileSpreadsheet, ArrowRight, AlertCircle, X, Plus, Calendar, Trash2, CreditCard, Building2 } from 'lucide-react';
+import { Upload, FileSpreadsheet, ArrowRight, AlertCircle, X, CreditCard, Building2, FileText, DollarSign, Tags, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ExpenseEntry, IncomeEntry } from '@/types/finance';
 import { useApp } from '@/contexts/AppContext';
 import { parseBRLCurrency, tryMergeCurrencyColumns, formatCurrency } from '@/lib/currencyParser';
-import { format } from 'date-fns';
 
 type FileType = 'credit_card' | 'bank_statement';
 
@@ -35,11 +33,6 @@ export function CSVImport({ categories, onImport, onImportIncomes, onNext, onBac
   const [error, setError] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileType, setFileType] = useState<FileType>('credit_card');
-
-  // Manual expense form
-  const [manualDate, setManualDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [manualDesc, setManualDesc] = useState('');
-  const [manualAmount, setManualAmount] = useState('');
 
   const parseCSV = useCallback((text: string): string[][] => {
     const lines = text.split(/\r?\n/).filter(line => line.trim());
@@ -83,7 +76,6 @@ export function CSVImport({ categories, onImport, onImportIncomes, onNext, onBac
       setHeaders(parsed[0]);
       setCsvData(parsed.slice(1));
 
-      // Auto-detect columns
       const headerLower = parsed[0].map(h => h.toLowerCase());
       const dateIdx = headerLower.findIndex(h => 
         h.includes('date') || h.includes('data') || h.includes('dt')
@@ -133,7 +125,6 @@ export function CSVImport({ categories, onImport, onImportIncomes, onNext, onBac
     }
 
     if (fileType === 'credit_card') {
-      // All values are expenses (take absolute value)
       const expenses: Omit<ExpenseEntry, 'id'>[] = rows.map(r => ({
         date: r.date,
         description: r.description,
@@ -142,7 +133,6 @@ export function CSVImport({ categories, onImport, onImportIncomes, onNext, onBac
       }));
       onImport(expenses);
     } else {
-      // Bank statement: positive = income, negative = expense
       const expenses: Omit<ExpenseEntry, 'id'>[] = [];
       const incomes: Omit<IncomeEntry, 'id'>[] = [];
 
@@ -167,25 +157,7 @@ export function CSVImport({ categories, onImport, onImportIncomes, onNext, onBac
       if (incomes.length > 0 && onImportIncomes) onImportIncomes(incomes);
     }
 
-    onNext();
-  };
-
-  const handleAddManualExpense = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!manualDate || !manualDesc.trim() || !manualAmount) return;
-
-    const amount = parseFloat(manualAmount);
-    if (isNaN(amount) || amount <= 0) return;
-
-    onImport([{
-      date: manualDate,
-      description: manualDesc.trim(),
-      amount: amount,
-      category: categories[categories.length - 1] as any,
-    }]);
-
-    setManualDesc('');
-    setManualAmount('');
+    // Don't auto-advance, let user import more files or proceed manually
   };
 
   const clearFile = () => {
@@ -196,7 +168,6 @@ export function CSVImport({ categories, onImport, onImportIncomes, onNext, onBac
     setError(null);
   };
 
-  // Preview: compute parsed amounts for display
   const previewRows = csvData.slice(0, 5).map(row => {
     if (!mapping.date || !mapping.description || !mapping.amount) return null;
     const dateIndex = headers.indexOf(mapping.date);
@@ -212,318 +183,295 @@ export function CSVImport({ categories, onImport, onImportIncomes, onNext, onBac
     };
   }).filter(Boolean) as { date: string; description: string; rawAmount: number }[];
 
+  const steps = [
+    {
+      icon: FileText,
+      title: t('import.step1Title'),
+      description: t('import.step1Desc'),
+    },
+    {
+      icon: DollarSign,
+      title: t('import.step2Title'),
+      description: t('import.step2Desc'),
+    },
+    {
+      icon: Tags,
+      title: t('import.step3Title'),
+      description: t('import.step3Desc'),
+    },
+    {
+      icon: BarChart3,
+      title: t('import.step4Title'),
+      description: t('import.step4Desc'),
+    },
+  ];
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-foreground mb-2">{t('import.title')}</h2>
-        <p className="text-muted-foreground">{t('import.subtitle')}</p>
+    <div className="space-y-8 animate-fade-in">
+      {/* Welcome Header */}
+      <div className="text-center mb-4">
+        <h2 className="text-2xl font-bold text-foreground mb-2">{t('import.welcomeTitle')}</h2>
+        <p className="text-muted-foreground max-w-xl mx-auto">{t('import.welcomeSubtitle')}</p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* CSV Upload */}
-        <Card className="border-border/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileSpreadsheet className="w-5 h-5 text-primary" />
-              {t('import.uploadCSV')}
-            </CardTitle>
-            <CardDescription>
-              {t('import.supported')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* File Type Toggle */}
-            <div className="space-y-2">
-              <Label className="text-xs font-medium">{t('import.fileType')}</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant={fileType === 'credit_card' ? 'default' : 'outline'}
-                  size="sm"
-                  className="gap-2 h-10"
-                  onClick={() => setFileType('credit_card')}
-                >
-                  <CreditCard className="h-4 w-4" />
-                  {t('import.creditCard')}
-                </Button>
-                <Button
-                  type="button"
-                  variant={fileType === 'bank_statement' ? 'default' : 'outline'}
-                  size="sm"
-                  className="gap-2 h-10"
-                  onClick={() => setFileType('bank_statement')}
-                >
-                  <Building2 className="h-4 w-4" />
-                  {t('import.bankStatement')}
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {fileType === 'credit_card' ? t('import.creditCardDesc') : t('import.bankStatementDesc')}
-              </p>
+      {/* Step-by-step guide */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {steps.map((step, i) => (
+          <div
+            key={i}
+            className={`flex flex-col items-center text-center p-4 rounded-xl border transition-colors ${
+              i === 0 ? 'border-primary/40 bg-primary/5' : 'border-border/50 bg-secondary/30'
+            }`}
+          >
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
+              i === 0 ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+            }`}>
+              <step.icon className="w-5 h-5" />
             </div>
-
-            {/* Upload Area */}
-            {!fileName ? (
-              <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-secondary/30 transition-all duration-200">
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <Upload className="w-10 h-10 text-muted-foreground mb-3" />
-                  <p className="mb-2 text-sm text-foreground">
-                    <span className="font-semibold">{t('import.dragDrop')}</span>
-                  </p>
-                  <p className="text-xs text-muted-foreground">CSV</p>
-                </div>
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-              </label>
-            ) : (
-              <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg border border-border">
-                <div className="flex items-center gap-3">
-                  <FileSpreadsheet className="w-8 h-8 text-primary" />
-                  <div>
-                    <p className="font-medium text-foreground">{fileName}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {csvData.length} rows
-                    </p>
-                  </div>
-                </div>
-                <Button variant="ghost" size="icon" onClick={clearFile}>
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            )}
-
-            {/* Column Mapping */}
-            {headers.length > 0 && (
-              <div className="space-y-4 pt-4 border-t border-border">
-                <h4 className="font-medium text-foreground">{t('import.mapping')}</h4>
-                
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label className="text-xs">{t('import.dateColumn')}</Label>
-                    <Select value={mapping.date} onValueChange={(v) => setMapping(m => ({ ...m, date: v }))}>
-                      <SelectTrigger className="bg-secondary border-border">
-                        <SelectValue placeholder={t('import.selectColumn')} />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover border-border">
-                        {headers.map((h) => (
-                          <SelectItem key={h} value={h}>{h}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs">{t('import.descColumn')}</Label>
-                    <Select value={mapping.description} onValueChange={(v) => setMapping(m => ({ ...m, description: v }))}>
-                      <SelectTrigger className="bg-secondary border-border">
-                        <SelectValue placeholder={t('import.selectColumn')} />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover border-border">
-                        {headers.map((h) => (
-                          <SelectItem key={h} value={h}>{h}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs">{t('import.amountColumn')}</Label>
-                    <Select value={mapping.amount} onValueChange={(v) => setMapping(m => ({ ...m, amount: v }))}>
-                      <SelectTrigger className="bg-secondary border-border">
-                        <SelectValue placeholder={t('import.selectColumn')} />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover border-border">
-                        {headers.map((h) => (
-                          <SelectItem key={h} value={h}>{h}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Preview */}
-                {previewRows.length > 0 && (
-                  <div className="pt-4">
-                    <h4 className="font-medium text-foreground mb-2">{t('import.preview')}</h4>
-                    <div className="overflow-x-auto rounded-lg border border-border">
-                      <table className="w-full text-sm">
-                        <thead className="bg-secondary">
-                          <tr>
-                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">{t('import.date')}</th>
-                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">{t('import.description')}</th>
-                            <th className="px-4 py-2 text-right font-medium text-muted-foreground">{t('income.amount')}</th>
-                            {fileType === 'bank_statement' && (
-                              <th className="px-4 py-2 text-center font-medium text-muted-foreground">{t('import.type')}</th>
-                            )}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {previewRows.map((row, i) => {
-                            const isIncome = fileType === 'bank_statement' && row.rawAmount > 0;
-                            return (
-                              <tr key={i} className="border-t border-border">
-                                <td className="px-4 py-2 text-foreground">{row.date}</td>
-                                <td className="px-4 py-2 text-foreground truncate max-w-[150px]">{row.description}</td>
-                                <td className={`px-4 py-2 text-right font-mono ${isIncome ? 'text-income' : 'text-expense'}`}>
-                                  {isIncome ? '+' : ''}{formatCurrency(row.rawAmount, language)}
-                                </td>
-                                {fileType === 'bank_statement' && (
-                                  <td className="px-4 py-2 text-center">
-                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                      isIncome 
-                                        ? 'bg-income/10 text-income' 
-                                        : 'bg-expense/10 text-expense'
-                                    }`}>
-                                      {isIncome ? t('import.incomeLabel') : t('import.expenseLabel')}
-                                    </span>
-                                  </td>
-                                )}
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-
-                {/* Import summary for bank statement */}
-                {fileType === 'bank_statement' && previewRows.length > 0 && (
-                  <div className="flex gap-4 text-sm">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-income" />
-                      <span className="text-muted-foreground">
-                        {csvData.filter(row => {
-                          const idx = headers.indexOf(mapping.amount);
-                          return idx >= 0 && parseBRLCurrency(tryMergeCurrencyColumns(row, idx)) > 0;
-                        }).length} {t('import.incomeLabel')}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-expense" />
-                      <span className="text-muted-foreground">
-                        {csvData.filter(row => {
-                          const idx = headers.indexOf(mapping.amount);
-                          return idx >= 0 && parseBRLCurrency(tryMergeCurrencyColumns(row, idx)) < 0;
-                        }).length} {t('import.expenseLabel')}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                <Button 
-                  onClick={handleImport} 
-                  disabled={!mapping.date || !mapping.description || !mapping.amount}
-                  variant="expense"
-                  className="w-full"
-                >
-                  <ArrowRight className="w-4 h-4" />
-                  {t('import.confirmImport')} ({csvData.length} {t('import.transactions')})
-                </Button>
-              </div>
-            )}
-
-            {error && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive">
-                <AlertCircle className="w-4 h-4" />
-                <span className="text-sm">{error}</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Manual Entry */}
-        <Card className="border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-primary">
-              <Plus className="w-5 h-5" />
-              {t('import.manualEntry')}
-            </CardTitle>
-            <CardDescription>{t('import.manualDesc')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleAddManualExpense} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="expense-date">{t('import.date')}</Label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="expense-date"
-                    type="date"
-                    className="pl-10 bg-secondary border-border"
-                    value={manualDate}
-                    onChange={(e) => setManualDate(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="expense-desc">{t('import.description')}</Label>
-                <Input
-                  id="expense-desc"
-                  placeholder={t('import.descPlaceholder')}
-                  className="bg-secondary border-border"
-                  value={manualDesc}
-                  onChange={(e) => setManualDesc(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="expense-amount">{t('income.amount')}</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                    {language === 'pt' ? 'R$' : '$'}
-                  </span>
-                  <Input
-                    id="expense-amount"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00"
-                    className="pl-9 bg-secondary border-border font-mono"
-                    value={manualAmount}
-                    onChange={(e) => setManualAmount(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <Button type="submit" className="w-full" variant="expense">
-                <Plus className="w-4 h-4" />
-                {t('import.addExpense')}
-              </Button>
-            </form>
-
-            {hasExpenses && (
-              <div className="mt-6 pt-6 border-t border-border">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    {expenseCount} {t('import.expensesImported')}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
-                    onClick={onClearExpenses}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    {t('import.clearAll')}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            <span className="text-xs font-semibold text-muted-foreground mb-1">
+              {language === 'pt' ? `Passo ${i + 1}` : `Step ${i + 1}`}
+            </span>
+            <span className="text-sm font-medium text-foreground">{step.title}</span>
+            <span className="text-xs text-muted-foreground mt-1">{step.description}</span>
+          </div>
+        ))}
       </div>
 
-      <div className="flex justify-between pt-4">
-        <Button variant="outline" onClick={onBack}>
-          {t('import.back')}
-        </Button>
-        <Button onClick={onNext} disabled={!hasExpenses}>
+      {/* Import Card */}
+      <Card className="border-border/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileSpreadsheet className="w-5 h-5 text-primary" />
+            {t('import.uploadCSV')}
+          </CardTitle>
+          <CardDescription>{t('import.supported')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* File Type Toggle */}
+          <div className="space-y-2">
+            <Label className="text-xs font-medium">{t('import.fileType')}</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant={fileType === 'credit_card' ? 'default' : 'outline'}
+                size="sm"
+                className="gap-2 h-10"
+                onClick={() => setFileType('credit_card')}
+              >
+                <CreditCard className="h-4 w-4" />
+                {t('import.creditCard')}
+              </Button>
+              <Button
+                type="button"
+                variant={fileType === 'bank_statement' ? 'default' : 'outline'}
+                size="sm"
+                className="gap-2 h-10"
+                onClick={() => setFileType('bank_statement')}
+              >
+                <Building2 className="h-4 w-4" />
+                {t('import.bankStatement')}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {fileType === 'credit_card' ? t('import.creditCardDesc') : t('import.bankStatementDesc')}
+            </p>
+          </div>
+
+          {/* Upload Area */}
+          {!fileName ? (
+            <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-secondary/30 transition-all duration-200">
+              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                <Upload className="w-10 h-10 text-muted-foreground mb-3" />
+                <p className="mb-2 text-sm text-foreground">
+                  <span className="font-semibold">{t('import.dragDrop')}</span>
+                </p>
+                <p className="text-xs text-muted-foreground">CSV</p>
+              </div>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            </label>
+          ) : (
+            <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg border border-border">
+              <div className="flex items-center gap-3">
+                <FileSpreadsheet className="w-8 h-8 text-primary" />
+                <div>
+                  <p className="font-medium text-foreground">{fileName}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {csvData.length} rows
+                  </p>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={clearFile}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+
+          {/* Column Mapping */}
+          {headers.length > 0 && (
+            <div className="space-y-4 pt-4 border-t border-border">
+              <h4 className="font-medium text-foreground">{t('import.mapping')}</h4>
+              
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-2">
+                  <Label className="text-xs">{t('import.dateColumn')}</Label>
+                  <Select value={mapping.date} onValueChange={(v) => setMapping(m => ({ ...m, date: v }))}>
+                    <SelectTrigger className="bg-secondary border-border">
+                      <SelectValue placeholder={t('import.selectColumn')} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      {headers.map((h) => (
+                        <SelectItem key={h} value={h}>{h}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs">{t('import.descColumn')}</Label>
+                  <Select value={mapping.description} onValueChange={(v) => setMapping(m => ({ ...m, description: v }))}>
+                    <SelectTrigger className="bg-secondary border-border">
+                      <SelectValue placeholder={t('import.selectColumn')} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      {headers.map((h) => (
+                        <SelectItem key={h} value={h}>{h}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs">{t('import.amountColumn')}</Label>
+                  <Select value={mapping.amount} onValueChange={(v) => setMapping(m => ({ ...m, amount: v }))}>
+                    <SelectTrigger className="bg-secondary border-border">
+                      <SelectValue placeholder={t('import.selectColumn')} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      {headers.map((h) => (
+                        <SelectItem key={h} value={h}>{h}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Preview */}
+              {previewRows.length > 0 && (
+                <div className="pt-4">
+                  <h4 className="font-medium text-foreground mb-2">{t('import.preview')}</h4>
+                  <div className="overflow-x-auto rounded-lg border border-border">
+                    <table className="w-full text-sm">
+                      <thead className="bg-secondary">
+                        <tr>
+                          <th className="px-4 py-2 text-left font-medium text-muted-foreground">{t('import.date')}</th>
+                          <th className="px-4 py-2 text-left font-medium text-muted-foreground">{t('import.description')}</th>
+                          <th className="px-4 py-2 text-right font-medium text-muted-foreground">{t('income.amount')}</th>
+                          {fileType === 'bank_statement' && (
+                            <th className="px-4 py-2 text-center font-medium text-muted-foreground">{t('import.type')}</th>
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {previewRows.map((row, i) => {
+                          const isIncome = fileType === 'bank_statement' && row.rawAmount > 0;
+                          return (
+                            <tr key={i} className="border-t border-border">
+                              <td className="px-4 py-2 text-foreground">{row.date}</td>
+                              <td className="px-4 py-2 text-foreground truncate max-w-[150px]">{row.description}</td>
+                              <td className={`px-4 py-2 text-right font-mono ${isIncome ? 'text-income' : 'text-expense'}`}>
+                                {isIncome ? '+' : ''}{formatCurrency(row.rawAmount, language)}
+                              </td>
+                              {fileType === 'bank_statement' && (
+                                <td className="px-4 py-2 text-center">
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                    isIncome 
+                                      ? 'bg-income/10 text-income' 
+                                      : 'bg-expense/10 text-expense'
+                                  }`}>
+                                    {isIncome ? t('import.incomeLabel') : t('import.expenseLabel')}
+                                  </span>
+                                </td>
+                              )}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Import summary for bank statement */}
+              {fileType === 'bank_statement' && previewRows.length > 0 && (
+                <div className="flex gap-4 text-sm">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-income" />
+                    <span className="text-muted-foreground">
+                      {csvData.filter(row => {
+                        const idx = headers.indexOf(mapping.amount);
+                        return idx >= 0 && parseBRLCurrency(tryMergeCurrencyColumns(row, idx)) > 0;
+                      }).length} {t('import.incomeLabel')}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-expense" />
+                    <span className="text-muted-foreground">
+                      {csvData.filter(row => {
+                        const idx = headers.indexOf(mapping.amount);
+                        return idx >= 0 && parseBRLCurrency(tryMergeCurrencyColumns(row, idx)) < 0;
+                      }).length} {t('import.expenseLabel')}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <Button 
+                onClick={handleImport} 
+                disabled={!mapping.date || !mapping.description || !mapping.amount}
+                variant="default"
+                className="w-full"
+              >
+                <ArrowRight className="w-4 h-4" />
+                {t('import.confirmImport')} ({csvData.length} {t('import.transactions')})
+              </Button>
+            </div>
+          )}
+
+          {error && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive">
+              <AlertCircle className="w-4 h-4" />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Imported status */}
+      {hasExpenses && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="pt-4 flex items-center justify-between">
+            <span className="text-sm font-medium text-foreground">
+              ✓ {expenseCount} {t('import.expensesImported')}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              onClick={onClearExpenses}
+            >
+              {t('import.clearAll')}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="flex justify-end pt-4">
+        <Button onClick={onNext}>
           <ArrowRight className="w-4 h-4" />
           {t('import.continue')}
         </Button>
