@@ -66,7 +66,7 @@ export default function Home() {
           </div>
           <Dialog open={newDialogOpen} onOpenChange={setNewDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="glow" size="lg">
+              <Button variant="default" size="lg">
                 <Plus className="h-5 w-5" />
                 {t('home.newClosure')}
               </Button>
