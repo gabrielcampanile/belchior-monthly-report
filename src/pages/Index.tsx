@@ -49,7 +49,7 @@ const Index = () => {
 
   const handleExportPDF = () => {
     try {
-      generatePDFReport(summary, incomes, expenses);
+      generatePDFReport(summary, incomes, expenses, new Date().getMonth() + 1, new Date().getFullYear(), language);
       toast({
         title: language === 'pt' ? "Relatório Exportado" : "Report Exported",
         description: language === 'pt' 
@@ -100,6 +100,7 @@ const Index = () => {
             categories={categories}
             onUpdateCategory={updateExpenseCategory}
             onRemoveExpense={removeExpense}
+            onAddExpenses={addExpenses}
             onNext={() => setCurrentStep(4)}
             onBack={() => setCurrentStep(2)}
             rules={rules}

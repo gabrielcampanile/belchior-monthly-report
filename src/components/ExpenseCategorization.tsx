@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trash2, Tag, ArrowRight, BarChart3, ArrowLeft, BookmarkPlus, Sparkles, X } from 'lucide-react';
+import { Plus, Trash2, Tag, ArrowRight, BarChart3, ArrowLeft, BookmarkPlus, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -14,6 +14,7 @@ interface ExpenseCategorizationProps {
   categories: string[];
   onUpdateCategory: (id: string, category: string) => void;
   onRemoveExpense: (id: string) => void;
+  onAddExpenses: (expenses: Omit<ExpenseEntry, 'id'>[]) => void;
   onNext: () => void;
   onBack: () => void;
   rules: CategorizationRule[];
@@ -26,6 +27,7 @@ export function ExpenseCategorization({
   categories,
   onUpdateCategory,
   onRemoveExpense,
+  onAddExpenses,
   onNext,
   onBack,
   rules,
@@ -36,6 +38,12 @@ export function ExpenseCategorization({
   const [newKeyword, setNewKeyword] = useState('');
   const [newRuleCategory, setNewRuleCategory] = useState(categories[0] || '');
   const [showRules, setShowRules] = useState(false);
+
+  // Manual expense form
+  const [manualDate, setManualDate] = useState('');
+  const [manualDesc, setManualDesc] = useState('');
+  const [manualAmount, setManualAmount] = useState('');
+  const [manualCategory, setManualCategory] = useState<string>(categories[0] || 'Other');
 
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const categorizedCount = expenses.filter(e => e.category !== 'Other').length;
@@ -57,19 +65,78 @@ export function ExpenseCategorization({
   };
 
   const handleSaveRuleFromExpense = async (description: string, category: string) => {
-    // Extract a keyword from the description (first meaningful word)
     const keyword = description.trim().split(/\s+/)[0]?.toLowerCase();
     if (keyword && keyword.length >= 3) {
       await onAddRule(keyword, category);
     }
   };
 
+  const handleAddManualExpense = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualDesc.trim() || !manualAmount) return;
+    onAddExpenses([{
+      date: manualDate || new Date().toISOString().split('T')[0],
+      description: manualDesc.trim(),
+      amount: parseFloat(manualAmount),
+      category: manualCategory as ExpenseCategory,
+    }]);
+    setManualDesc('');
+    setManualAmount('');
+    setManualDate('');
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-foreground mb-2">{t('categorize.title')}</h2>
-        <p className="text-muted-foreground">{t('categorize.subtitle')}</p>
+        <h2 className="text-2xl font-bold text-foreground mb-2">{t('expenses.title')}</h2>
+        <p className="text-muted-foreground">{t('expenses.subtitle')}</p>
       </div>
+
+      {/* Add manual expense */}
+      <Card className="border-border/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-expense text-base">
+            <Plus className="w-4 h-4" />
+            {t('expenses.newEntry')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleAddManualExpense} className="flex flex-wrap items-end gap-3">
+            <div className="space-y-1 flex-1 min-w-[120px]">
+              <label className="text-xs text-muted-foreground">{t('categorize.date')}</label>
+              <Input type="date" value={manualDate} onChange={e => setManualDate(e.target.value)} className="bg-secondary border-border text-sm h-9" />
+            </div>
+            <div className="space-y-1 flex-[2] min-w-[160px]">
+              <label className="text-xs text-muted-foreground">{t('categorize.description')}</label>
+              <Input placeholder={t('import.descPlaceholder')} value={manualDesc} onChange={e => setManualDesc(e.target.value)} className="bg-secondary border-border text-sm h-9" />
+            </div>
+            <div className="space-y-1 min-w-[130px]">
+              <label className="text-xs text-muted-foreground">{t('categorize.category')}</label>
+              <Select value={manualCategory} onValueChange={setManualCategory}>
+                <SelectTrigger className="bg-secondary border-border text-sm h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border">
+                  {categories.map(cat => (
+                    <SelectItem key={cat} value={cat}>{getTranslatedCategory(cat)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1 min-w-[120px]">
+              <label className="text-xs text-muted-foreground">{t('categorize.amount')}</label>
+              <div className="relative">
+                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">{language === 'pt' ? 'R$' : '$'}</span>
+                <Input type="number" step="0.01" min="0" placeholder="0.00" value={manualAmount} onChange={e => setManualAmount(e.target.value)} className="pl-7 bg-secondary border-border font-mono text-sm h-9" />
+              </div>
+            </div>
+            <Button type="submit" variant="destructive" size="sm" className="h-9">
+              <Plus className="w-4 h-4" />
+              {t('expenses.addButton')}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       {/* Stats Bar */}
       <div className="grid grid-cols-3 gap-4">
@@ -158,8 +225,8 @@ export function ExpenseCategorization({
       <Card className="border-border/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Tag className="w-5 h-5 text-primary" />
-            {t('categorize.title')}
+            <Tag className="w-5 h-5 text-expense" />
+            {t('expenses.entries')}
           </CardTitle>
           <CardDescription>
             {expenses.length} {t('import.transactions')}
@@ -170,76 +237,79 @@ export function ExpenseCategorization({
             <div className="text-center py-12 text-muted-foreground">
               <BarChart3 className="w-12 h-12 mx-auto mb-3 opacity-30" />
               <p>{t('categorize.noExpenses')}</p>
-              <Button variant="outline" className="mt-4" onClick={onBack}>
-                {t('categorize.importFirst')}
-              </Button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">{t('categorize.date')}</th>
-                    <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">{t('categorize.description')}</th>
-                    <th className="text-right py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">{t('categorize.amount')}</th>
-                    <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">{t('categorize.category')}</th>
-                    <th className="w-20"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {expenses.map((expense) => (
-                    <tr key={expense.id} className="group hover:bg-secondary/30 transition-colors">
-                      <td className="py-3 px-2 text-sm text-muted-foreground whitespace-nowrap">{expense.date}</td>
-                      <td className="py-3 px-2 text-sm text-foreground max-w-[200px] truncate">{expense.description}</td>
-                      <td className="py-3 px-2 text-sm font-mono font-medium text-expense text-right whitespace-nowrap">
-                        {formatCurrency(expense.amount, language)}
-                      </td>
-                      <td className="py-3 px-2">
-                        <Select
-                          value={expense.category}
-                          onValueChange={(v) => onUpdateCategory(expense.id, v)}
-                        >
-                          <SelectTrigger className="w-[180px] h-8 text-xs bg-secondary border-border">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-popover border-border">
-                            {categories.map((cat) => (
-                              <SelectItem key={cat} value={cat}>
-                                <div className="flex items-center gap-2">
-                                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getCategoryColor(cat) }} />
-                                  {getTranslatedCategory(cat)}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </td>
-                      <td className="py-3 px-2 flex items-center gap-1">
-                        {expense.category !== 'Other' && (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">{t('categorize.date')}</th>
+                      <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">{t('categorize.description')}</th>
+                      <th className="text-right py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">{t('categorize.amount')}</th>
+                      <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">{t('categorize.category')}</th>
+                      <th className="w-20"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {expenses.map((expense) => (
+                      <tr key={expense.id} className="group hover:bg-secondary/30 transition-colors">
+                        <td className="py-3 px-2 text-sm text-muted-foreground whitespace-nowrap">{expense.date}</td>
+                        <td className="py-3 px-2 text-sm text-foreground max-w-[200px] truncate">{expense.description}</td>
+                        <td className="py-3 px-2 text-sm font-mono font-medium text-expense text-right whitespace-nowrap">
+                          {formatCurrency(expense.amount, language)}
+                        </td>
+                        <td className="py-3 px-2">
+                          <Select
+                            value={expense.category}
+                            onValueChange={(v) => onUpdateCategory(expense.id, v)}
+                          >
+                            <SelectTrigger className="w-[180px] h-8 text-xs bg-secondary border-border">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-popover border-border">
+                              {categories.map((cat) => (
+                                <SelectItem key={cat} value={cat}>
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getCategoryColor(cat) }} />
+                                    {getTranslatedCategory(cat)}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="py-3 px-2 flex items-center gap-1">
+                          {expense.category !== 'Other' && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title={t('rules.saveRule')}
+                              onClick={() => handleSaveRuleFromExpense(expense.description, expense.category)}
+                              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-primary hover:text-primary hover:bg-primary/10"
+                            >
+                              <BookmarkPlus className="w-4 h-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"
-                            title={t('rules.saveRule')}
-                            onClick={() => handleSaveRuleFromExpense(expense.description, expense.category)}
-                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-primary hover:text-primary hover:bg-primary/10"
+                            onClick={() => onRemoveExpense(expense.id)}
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
                           >
-                            <BookmarkPlus className="w-4 h-4" />
+                            <Trash2 className="w-4 h-4" />
                           </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onRemoveExpense(expense.id)}
-                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
+                <span className="text-muted-foreground">{t('categorize.total')}</span>
+                <span className="text-xl font-bold font-mono text-expense">{formatCurrency(totalExpenses, language)}</span>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -249,7 +319,7 @@ export function ExpenseCategorization({
           <ArrowLeft className="w-4 h-4" />
           {t('categorize.back')}
         </Button>
-        <Button onClick={onNext} disabled={expenses.length === 0}>
+        <Button onClick={onNext}>
           <ArrowRight className="w-4 h-4" />
           {t('categorize.continue')}
         </Button>
