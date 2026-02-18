@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 const STEPS = [
   { id: 1, label: 'Import' },
   { id: 2, label: 'Income' },
-  { id: 3, label: 'Categorize' },
+  { id: 3, label: 'Expenses' },
   { id: 4, label: 'Summary' },
 ];
 
@@ -97,7 +97,7 @@ export default function Closure() {
 
   const handleExportPDF = () => {
     try {
-      generatePDFReport(summary, incomes, expenses);
+      generatePDFReport(summary, incomes, expenses, closureMonth, closureYear, language);
       toast({
         title: language === 'pt' ? 'Relatório Exportado' : 'Report Exported',
         description: language === 'pt' ? 'Seu relatório mensal foi baixado como PDF.' : 'Your monthly report has been downloaded as PDF.',
@@ -158,6 +158,7 @@ export default function Closure() {
             categories={categoryStore.categories}
             onUpdateCategory={updateExpenseCategory}
             onRemoveExpense={removeExpense}
+            onAddExpenses={addExpenses}
             onNext={() => setCurrentStep(4)}
             onBack={() => setCurrentStep(2)}
             rules={rules}

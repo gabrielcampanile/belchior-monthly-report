@@ -20,7 +20,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Steps
     'steps.income': 'Income',
     'steps.import': 'Import',
-    'steps.categorize': 'Categorize',
+    'steps.categorize': 'Expenses',
     'steps.summary': 'Summary',
     
     // Income Form
@@ -98,6 +98,13 @@ const translations: Record<Language, Record<string, string>> = {
     'category.Electronics / Durable goods': 'Electronics / Durable goods',
     'category.Other': 'Other',
     
+    // Expenses step
+    'expenses.title': 'Manage Expenses',
+    'expenses.subtitle': 'Review, categorize, and add expenses',
+    'expenses.newEntry': 'New Expense Entry',
+    'expenses.addButton': 'Add Expense',
+    'expenses.entries': 'Expense Entries',
+
     // Expense Categorization
     'categorize.title': 'Categorize Expenses',
     'categorize.subtitle': 'Assign a category to each transaction',
@@ -225,7 +232,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Steps
     'steps.income': 'Renda',
     'steps.import': 'Importar',
-    'steps.categorize': 'Categorizar',
+    'steps.categorize': 'Despesas',
     'steps.summary': 'Resumo',
     
     // Income Form
@@ -303,6 +310,13 @@ const translations: Record<Language, Record<string, string>> = {
     'category.Electronics / Durable goods': 'Eletrônicos / Bens duráveis',
     'category.Other': 'Outros',
     
+    // Expenses step
+    'expenses.title': 'Gerenciar Despesas',
+    'expenses.subtitle': 'Revise, categorize e adicione despesas',
+    'expenses.newEntry': 'Nova Entrada de Despesa',
+    'expenses.addButton': 'Adicionar Despesa',
+    'expenses.entries': 'Entradas de Despesa',
+
     // Expense Categorization
     'categorize.title': 'Categorizar Despesas',
     'categorize.subtitle': 'Atribua uma categoria a cada transação',

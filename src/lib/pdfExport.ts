@@ -5,18 +5,22 @@ import { FinancialSummary, EXPENSE_CATEGORIES, CATEGORY_COLORS, IncomeEntry, Exp
 export function generatePDFReport(
   summary: FinancialSummary,
   incomes: IncomeEntry[],
-  expenses: ExpenseEntry[]
+  expenses: ExpenseEntry[],
+  month: number,
+  year: number,
+  language: 'en' | 'pt' = 'pt'
 ): void {
   const doc = new jsPDF();
-  const currentMonth = new Date().toLocaleDateString('en-US', { 
-    month: 'long', 
-    year: 'numeric' 
-  });
-  
+
+  const locale = language === 'pt' ? 'pt-BR' : 'en-US';
+  const currency = language === 'pt' ? 'BRL' : 'USD';
+  const periodDate = new Date(year, month - 1, 1);
+  const periodLabel = periodDate.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: 'USD',
+      currency,
     }).format(value);
   };
 
@@ -24,30 +28,30 @@ export function generatePDFReport(
 
   // Header
   doc.setFontSize(24);
-  doc.setTextColor(20, 184, 166); // Primary teal color
-  doc.text('Monthly Finance Report', 20, 25);
+  doc.setTextColor(20, 184, 166);
+  doc.text(language === 'pt' ? 'Relatório Financeiro Mensal' : 'Monthly Finance Report', 20, 25);
   
   doc.setFontSize(12);
   doc.setTextColor(100, 100, 100);
-  doc.text(currentMonth, 20, 35);
-  doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 42);
+  doc.text(periodLabel.charAt(0).toUpperCase() + periodLabel.slice(1), 20, 35);
+  doc.text(`${language === 'pt' ? 'Gerado em' : 'Generated'}: ${new Date().toLocaleDateString(locale)}`, 20, 42);
 
   // Summary Section
   doc.setFontSize(16);
   doc.setTextColor(40, 40, 40);
-  doc.text('Financial Summary', 20, 60);
+  doc.text(language === 'pt' ? 'Resumo Financeiro' : 'Financial Summary', 20, 60);
 
   const summaryData = [
-    ['Total Income', formatCurrency(summary.totalIncome)],
-    ['Total Expenses', formatCurrency(summary.totalExpenses)],
-    ['Net Investment', formatCurrency(summary.totalInvestment)],
-    ['Spent Percentage', formatPercent(summary.spentPercentage)],
-    ['Invested Percentage', formatPercent(summary.investedPercentage)],
+    [language === 'pt' ? 'Renda Total' : 'Total Income', formatCurrency(summary.totalIncome)],
+    [language === 'pt' ? 'Total de Despesas' : 'Total Expenses', formatCurrency(summary.totalExpenses)],
+    [language === 'pt' ? 'Investimento Líquido' : 'Net Investment', formatCurrency(summary.totalInvestment)],
+    [language === 'pt' ? '% Gasto' : 'Spent Percentage', formatPercent(summary.spentPercentage)],
+    [language === 'pt' ? '% Investido' : 'Invested Percentage', formatPercent(summary.investedPercentage)],
   ];
 
   autoTable(doc, {
     startY: 65,
-    head: [['Metric', 'Value']],
+    head: [[language === 'pt' ? 'Métrica' : 'Metric', language === 'pt' ? 'Valor' : 'Value']],
     body: summaryData,
     theme: 'striped',
     headStyles: { fillColor: [20, 184, 166] },
@@ -59,7 +63,7 @@ export function generatePDFReport(
   const incomeStartY = (doc as any).lastAutoTable.finalY + 15;
   doc.setFontSize(16);
   doc.setTextColor(40, 40, 40);
-  doc.text('Income Sources', 20, incomeStartY);
+  doc.text(language === 'pt' ? 'Fontes de Renda' : 'Income Sources', 20, incomeStartY);
 
   const incomeData = incomes.map(income => [
     income.source,
@@ -69,10 +73,10 @@ export function generatePDFReport(
 
   autoTable(doc, {
     startY: incomeStartY + 5,
-    head: [['Source', 'Type', 'Amount']],
+    head: [[language === 'pt' ? 'Fonte' : 'Source', language === 'pt' ? 'Tipo' : 'Type', language === 'pt' ? 'Valor' : 'Amount']],
     body: incomeData,
     theme: 'striped',
-    headStyles: { fillColor: [34, 197, 94] }, // Green for income
+    headStyles: { fillColor: [34, 197, 94] },
     styles: { fontSize: 10 },
     columnStyles: { 2: { halign: 'right' } },
   });
@@ -81,7 +85,7 @@ export function generatePDFReport(
   const categoryStartY = (doc as any).lastAutoTable.finalY + 15;
   doc.setFontSize(16);
   doc.setTextColor(40, 40, 40);
-  doc.text('Expenses by Category', 20, categoryStartY);
+  doc.text(language === 'pt' ? 'Despesas por Categoria' : 'Expenses by Category', 20, categoryStartY);
 
   const categoryData = EXPENSE_CATEGORIES
     .filter(cat => summary.expensesByCategory[cat] > 0)
@@ -96,10 +100,10 @@ export function generatePDFReport(
 
   autoTable(doc, {
     startY: categoryStartY + 5,
-    head: [['Category', 'Amount', '% of Total']],
+    head: [[language === 'pt' ? 'Categoria' : 'Category', language === 'pt' ? 'Valor' : 'Amount', '% do Total']],
     body: categoryData,
     theme: 'striped',
-    headStyles: { fillColor: [239, 68, 68] }, // Coral for expenses
+    headStyles: { fillColor: [239, 68, 68] },
     styles: { fontSize: 10 },
     columnStyles: { 
       1: { halign: 'right' },
@@ -114,18 +118,17 @@ export function generatePDFReport(
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
     doc.text(
-      'Generated by Monthly Closure Tool',
+      language === 'pt' ? 'Gerado por Fechamento Mensal' : 'Generated by Monthly Closure Tool',
       20,
       doc.internal.pageSize.height - 10
     );
     doc.text(
-      `Page ${i} of ${pageCount}`,
+      `${language === 'pt' ? 'Página' : 'Page'} ${i} ${language === 'pt' ? 'de' : 'of'} ${pageCount}`,
       doc.internal.pageSize.width - 30,
       doc.internal.pageSize.height - 10
     );
   }
 
-  // Save the PDF
-  const fileName = `monthly-report-${currentMonth.toLowerCase().replace(' ', '-')}.pdf`;
+  const fileName = `relatorio-${periodLabel.toLowerCase().replace(/\s+/g, '-')}.pdf`;
   doc.save(fileName);
 }
