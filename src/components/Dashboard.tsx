@@ -2,7 +2,7 @@ import { TrendingUp, TrendingDown, PiggyBank, Percent, FileDown, ArrowLeft } fro
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FinancialSummary, EXPENSE_CATEGORIES, CATEGORY_COLORS, ExpenseCategory } from '@/types/finance';
+import { FinancialSummary } from '@/types/finance';
 import { useApp } from '@/contexts/AppContext';
 import { formatCurrency } from '@/lib/currencyParser';
 
@@ -10,30 +10,60 @@ interface DashboardProps {
   summary: FinancialSummary;
   onExportPDF: () => void;
   onBack: () => void;
+  getCategoryColor: (name: string) => string;
+  getIncomeTypeColor: (name: string) => string;
+  getCategoryDisplayName?: (name: string) => string;
+  getIncomeTypeDisplayName?: (name: string) => string;
 }
 
-export function Dashboard({ summary, onExportPDF, onBack }: DashboardProps) {
+export function Dashboard({ summary, onExportPDF, onBack, getCategoryColor, getIncomeTypeColor, getCategoryDisplayName, getIncomeTypeDisplayName }: DashboardProps) {
   const { language, t } = useApp();
 
   const getTranslatedCategory = (category: string) => {
+    if (getCategoryDisplayName) {
+      const display = getCategoryDisplayName(category);
+      if (display !== category) return display;
+    }
     const key = `category.${category}`;
     const translated = t(key);
     return translated !== key ? translated : category;
+  };
+
+  const getTranslatedIncomeType = (type: string) => {
+    if (getIncomeTypeDisplayName) {
+      const display = getIncomeTypeDisplayName(type);
+      if (display !== type) return display;
+    }
+    const key = `incomeType.${type}`;
+    const translated = t(key);
+    return translated !== key ? translated : type;
   };
 
   const formatPercent = (value: number) => {
     return `${value.toFixed(1)}%`;
   };
 
-  const chartData = EXPENSE_CATEGORIES
-    .filter(cat => summary.expensesByCategory[cat] > 0)
-    .map(cat => ({
+  // Expense chart data from dynamic categories
+  const expenseChartData = Object.entries(summary.expensesByCategory)
+    .filter(([, value]) => value > 0)
+    .map(([cat, value]) => ({
       name: getTranslatedCategory(cat),
-      value: summary.expensesByCategory[cat],
-      color: CATEGORY_COLORS[cat],
-    }));
+      value,
+      color: getCategoryColor(cat),
+    }))
+    .sort((a, b) => b.value - a.value);
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  // Income chart data from dynamic types
+  const incomeChartData = Object.entries(summary.incomesByType)
+    .filter(([, value]) => value > 0)
+    .map(([type, value]) => ({
+      name: getTranslatedIncomeType(type),
+      value,
+      color: getIncomeTypeColor(type),
+    }))
+    .sort((a, b) => b.value - a.value);
+
+  const CustomTooltip = ({ active, payload, total }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -43,7 +73,7 @@ export function Dashboard({ summary, onExportPDF, onBack }: DashboardProps) {
             {formatCurrency(data.value, language)}
           </p>
           <p className="text-xs text-muted-foreground">
-            {((data.value / summary.totalExpenses) * 100).toFixed(1)}%
+            {((data.value / total) * 100).toFixed(1)}%
           </p>
         </div>
       );
@@ -129,129 +159,188 @@ export function Dashboard({ summary, onExportPDF, onBack }: DashboardProps) {
         </Card>
       </div>
 
-      {/* Spending Breakdown */}
+      {/* Spent vs Invested Bar */}
+      <Card className="border-border/50">
+        <CardHeader>
+          <CardTitle>{t('dashboard.spentVsInvested')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex h-8 rounded-lg overflow-hidden">
+              <div 
+                className="bg-expense flex items-center justify-center text-xs font-medium text-expense-foreground transition-all duration-500"
+                style={{ width: `${Math.min(summary.spentPercentage, 100)}%` }}
+              >
+                {summary.spentPercentage > 10 && t('dashboard.spent')}
+              </div>
+              <div 
+                className="bg-investment flex items-center justify-center text-xs font-medium text-investment-foreground transition-all duration-500"
+                style={{ width: `${Math.min(summary.investedPercentage, 100)}%` }}
+              >
+                {summary.investedPercentage > 10 && t('dashboard.invested')}
+              </div>
+            </div>
+            <div className="flex justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-expense" />
+                <span className="text-muted-foreground">{t('dashboard.spent')}:</span>
+                <span className="font-mono font-medium text-foreground">
+                  {formatPercent(summary.spentPercentage)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-investment" />
+                <span className="text-muted-foreground">{t('dashboard.invested')}:</span>
+                <span className="font-mono font-medium text-foreground">
+                  {formatPercent(summary.investedPercentage)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Expense & Income Breakdown */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Pie Chart */}
+        {/* Expense Pie Chart + List */}
         <Card className="border-border/50">
           <CardHeader>
-            <CardTitle>{t('dashboard.breakdown')}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingDown className="w-5 h-5 text-expense" />
+              {t('dashboard.breakdown')}
+            </CardTitle>
             <CardDescription>{t('dashboard.subtitle')}</CardDescription>
           </CardHeader>
           <CardContent>
-            {chartData.length > 0 ? (
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={chartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend 
-                      formatter={(value) => <span className="text-foreground text-sm">{value}</span>}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
+            {expenseChartData.length > 0 ? (
+              <>
+                <div className="h-[250px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={expenseChartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={55}
+                        outerRadius={90}
+                        paddingAngle={2}
+                        dataKey="value"
+                      >
+                        {expenseChartData.map((entry, index) => (
+                          <Cell key={`cell-exp-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip total={summary.totalExpenses} />} />
+                      <Legend 
+                        formatter={(value) => <span className="text-foreground text-sm">{value}</span>}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="space-y-3 pt-4 border-t border-border">
+                  {expenseChartData.map(item => {
+                    const percentage = summary.totalExpenses > 0 
+                      ? (item.value / summary.totalExpenses) * 100 
+                      : 0;
+                    return (
+                      <div key={item.name} className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                            <span className="text-sm text-foreground">{item.name}</span>
+                          </div>
+                          <span className="text-sm font-mono font-medium text-foreground">
+                            {formatCurrency(item.value, language)}
+                          </span>
+                        </div>
+                        <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
+                          <div 
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${percentage}%`, backgroundColor: item.color }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             ) : (
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+              <div className="h-[200px] flex items-center justify-center text-muted-foreground">
                 {t('categorize.noExpenses')}
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Category List */}
+        {/* Income Pie Chart + List */}
         <Card className="border-border/50">
           <CardHeader>
-            <CardTitle>{t('dashboard.spentVsInvested')}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-income" />
+              {language === 'pt' ? 'Detalhamento de Rendas' : 'Income Breakdown'}
+            </CardTitle>
+            <CardDescription>
+              {language === 'pt' ? 'Distribuição por tipo de renda' : 'Distribution by income type'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4 mb-6">
-              <div className="flex h-8 rounded-lg overflow-hidden">
-                <div 
-                  className="bg-expense flex items-center justify-center text-xs font-medium text-expense-foreground transition-all duration-500"
-                  style={{ width: `${Math.min(summary.spentPercentage, 100)}%` }}
-                >
-                  {summary.spentPercentage > 10 && t('dashboard.spent')}
+            {incomeChartData.length > 0 ? (
+              <>
+                <div className="h-[250px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={incomeChartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={55}
+                        outerRadius={90}
+                        paddingAngle={2}
+                        dataKey="value"
+                      >
+                        {incomeChartData.map((entry, index) => (
+                          <Cell key={`cell-inc-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip total={summary.totalIncome} />} />
+                      <Legend 
+                        formatter={(value) => <span className="text-foreground text-sm">{value}</span>}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-                <div 
-                  className="bg-investment flex items-center justify-center text-xs font-medium text-investment-foreground transition-all duration-500"
-                  style={{ width: `${Math.min(summary.investedPercentage, 100)}%` }}
-                >
-                  {summary.investedPercentage > 10 && t('dashboard.invested')}
-                </div>
-              </div>
-              <div className="flex justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-expense" />
-                  <span className="text-muted-foreground">{t('dashboard.spent')}:</span>
-                  <span className="font-mono font-medium text-foreground">
-                    {formatPercent(summary.spentPercentage)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-investment" />
-                  <span className="text-muted-foreground">{t('dashboard.invested')}:</span>
-                  <span className="font-mono font-medium text-foreground">
-                    {formatPercent(summary.investedPercentage)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3 pt-4 border-t border-border">
-              {EXPENSE_CATEGORIES
-                .filter(cat => summary.expensesByCategory[cat] > 0)
-                .sort((a, b) => summary.expensesByCategory[b] - summary.expensesByCategory[a])
-                .map(cat => {
-                  const amount = summary.expensesByCategory[cat];
-                  const percentage = summary.totalExpenses > 0 
-                    ? (amount / summary.totalExpenses) * 100 
-                    : 0;
-                  
-                  return (
-                    <div key={cat} className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: CATEGORY_COLORS[cat] }}
-                          />
-                          <span className="text-sm text-foreground">{getTranslatedCategory(cat)}</span>
+                <div className="space-y-3 pt-4 border-t border-border">
+                  {incomeChartData.map(item => {
+                    const percentage = summary.totalIncome > 0 
+                      ? (item.value / summary.totalIncome) * 100 
+                      : 0;
+                    return (
+                      <div key={item.name} className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                            <span className="text-sm text-foreground">{item.name}</span>
+                          </div>
+                          <span className="text-sm font-mono font-medium text-foreground">
+                            {formatCurrency(item.value, language)}
+                          </span>
                         </div>
-                        <span className="text-sm font-mono font-medium text-foreground">
-                          {formatCurrency(amount, language)}
-                        </span>
+                        <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
+                          <div 
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${percentage}%`, backgroundColor: item.color }}
+                          />
+                        </div>
                       </div>
-                      <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-                        <div 
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{ 
-                            width: `${percentage}%`,
-                            backgroundColor: CATEGORY_COLORS[cat],
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              
-              {chartData.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  {t('categorize.noExpenses')}
+                    );
+                  })}
                 </div>
-              )}
-            </div>
+              </>
+            ) : (
+              <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+                {language === 'pt' ? 'Nenhuma renda cadastrada' : 'No income entries'}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

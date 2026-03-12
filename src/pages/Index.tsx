@@ -46,6 +46,10 @@ const Index = () => {
     removeIncomeType,
     isDefaultCategory,
     isDefaultIncomeType,
+    getCategoryColor,
+    getIncomeTypeColor,
+    getCategoryDisplayName,
+    getIncomeTypeDisplayName,
   } = useCategoryStore();
 
   const handleExportPDF = () => {
@@ -133,6 +137,10 @@ const Index = () => {
             summary={summary}
             onExportPDF={handleExportPDF}
             onBack={() => setCurrentStep(3)}
+            getCategoryColor={getCategoryColor}
+            getIncomeTypeColor={getIncomeTypeColor}
+            getCategoryDisplayName={getCategoryDisplayName}
+            getIncomeTypeDisplayName={getIncomeTypeDisplayName}
           />
         );
       default:

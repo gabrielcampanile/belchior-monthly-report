@@ -33,7 +33,8 @@ export interface FinancialSummary {
   totalInvestment: number;
   spentPercentage: number;
   investedPercentage: number;
-  expensesByCategory: Record<ExpenseCategory, number>;
+  expensesByCategory: Record<string, number>;
+  incomesByType: Record<string, number>;
 }
 
 export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
