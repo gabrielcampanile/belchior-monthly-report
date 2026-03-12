@@ -46,6 +46,10 @@ const Index = () => {
     removeIncomeType,
     isDefaultCategory,
     isDefaultIncomeType,
+    getCategoryColor,
+    getIncomeTypeColor,
+    getCategoryDisplayName,
+    getIncomeTypeDisplayName,
   } = useCategoryStore();
 
   const handleExportPDF = () => {
