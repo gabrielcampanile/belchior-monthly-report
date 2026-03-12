@@ -173,5 +173,31 @@ export function useClosures() {
     await fetchClosures();
   }, [fetchClosures]);
 
-  return { closures, loading, saveClosure, loadClosure, deleteClosure, refetch: fetchClosures };
+  const updateClosurePeriod = useCallback(async (closureId: string, month: number, year: number) => {
+    if (!user) throw new Error('Not authenticated');
+    
+    // Check if target period already exists
+    const { data: existing } = await supabase
+      .from('monthly_closures')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('month', month)
+      .eq('year', year)
+      .neq('id', closureId)
+      .maybeSingle();
+
+    if (existing) {
+      throw new Error('PERIOD_EXISTS');
+    }
+
+    const { error } = await supabase
+      .from('monthly_closures')
+      .update({ month, year })
+      .eq('id', closureId);
+
+    if (error) throw error;
+    await fetchClosures();
+  }, [user, fetchClosures]);
+
+  return { closures, loading, saveClosure, loadClosure, deleteClosure, updateClosurePeriod, refetch: fetchClosures };
 }

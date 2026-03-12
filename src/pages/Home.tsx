@@ -10,22 +10,29 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Header } from '@/components/Header';
 import { useApp } from '@/contexts/AppContext';
-import { useClosures } from '@/hooks/useClosures';
+import { useClosures, ClosureSummary } from '@/hooks/useClosures';
 import { useCategoryStore } from '@/hooks/useCategoryStore';
 import { formatCurrency } from '@/lib/currencyParser';
+import { toast } from '@/hooks/use-toast';
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 
 export default function Home() {
   const navigate = useNavigate();
   const { language, t } = useApp();
-  const { closures, loading, deleteClosure } = useClosures();
+  const { closures, loading, deleteClosure, updateClosurePeriod } = useClosures();
   const categoryStore = useCategoryStore();
 
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [newDialogOpen, setNewDialogOpen] = useState(false);
+
+  // Edit period state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingClosure, setEditingClosure] = useState<ClosureSummary | null>(null);
+  const [editMonth, setEditMonth] = useState(1);
+  const [editYear, setEditYear] = useState(now.getFullYear());
 
   const locale = language === 'pt' ? ptBR : enUS;
 
@@ -44,6 +51,29 @@ export default function Home() {
       navigate(`/closure/new?month=${selectedMonth}&year=${selectedYear}`);
     }
     setNewDialogOpen(false);
+  };
+
+  const openEditDialog = (closure: ClosureSummary, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingClosure(closure);
+    setEditMonth(closure.month);
+    setEditYear(closure.year);
+    setEditDialogOpen(true);
+  };
+
+  const handleEditPeriod = async () => {
+    if (!editingClosure) return;
+    try {
+      await updateClosurePeriod(editingClosure.id, editMonth, editYear);
+      setEditDialogOpen(false);
+      setEditingClosure(null);
+    } catch (err: any) {
+      if (err.message === 'PERIOD_EXISTS') {
+        toast({ title: t('auth.error'), description: t('home.periodExists'), variant: 'destructive' });
+      } else {
+        toast({ title: t('auth.error'), description: err.message, variant: 'destructive' });
+      }
+    }
   };
 
   return (
@@ -162,6 +192,15 @@ export default function Home() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
+                        title={t('home.editPeriod')}
+                        onClick={(e) => openEditDialog(closure, e)}
+                      >
+                        <Calendar className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
                         onClick={(e) => { e.stopPropagation(); navigate(`/closure/${closure.id}`); }}
                       >
                         <Eye className="h-4 w-4" />
@@ -235,6 +274,51 @@ export default function Home() {
             })}
           </div>
         )}
+
+        {/* Edit Period Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
+            <DialogHeader>
+              <DialogTitle>{t('home.editPeriod')}</DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">{t('home.month')}</label>
+                <Select value={String(editMonth)} onValueChange={v => setEditMonth(Number(v))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MONTHS.map(m => (
+                      <SelectItem key={m} value={String(m)}>
+                        <span className="capitalize">{getMonthName(m)}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">{t('home.year')}</label>
+                <Select value={String(editYear)} onValueChange={v => setEditYear(Number(v))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {years.map(y => (
+                      <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleEditPeriod} className="w-full">
+                <Calendar className="h-4 w-4 mr-2" />
+                {t('home.editPeriod')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
