@@ -3,7 +3,6 @@ import {
   IncomeEntry, 
   ExpenseEntry, 
   FinancialSummary, 
-  EXPENSE_CATEGORIES,
   ExpenseCategory 
 } from '@/types/finance';
 
