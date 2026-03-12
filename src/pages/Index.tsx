@@ -137,10 +137,10 @@ const Index = () => {
             summary={summary}
             onExportPDF={handleExportPDF}
             onBack={() => setCurrentStep(3)}
-            getCategoryColor={categoryStore.getCategoryColor}
-            getIncomeTypeColor={categoryStore.getIncomeTypeColor}
-            getCategoryDisplayName={categoryStore.getCategoryDisplayName}
-            getIncomeTypeDisplayName={categoryStore.getIncomeTypeDisplayName}
+            getCategoryColor={getCategoryColor}
+            getIncomeTypeColor={getIncomeTypeColor}
+            getCategoryDisplayName={getCategoryDisplayName}
+            getIncomeTypeDisplayName={getIncomeTypeDisplayName}
           />
         );
       default:
