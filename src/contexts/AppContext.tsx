@@ -166,6 +166,8 @@ const translations: Record<Language, Record<string, string>> = {
     'home.backHome': 'Back to Home',
     'home.complete': 'Complete',
     'home.draft': 'Draft',
+    'home.editPeriod': 'Change Period',
+    'home.periodExists': 'A closure for this period already exists.',
 
     // History
     'history.title': 'Financial History',
