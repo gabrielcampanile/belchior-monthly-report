@@ -407,6 +407,8 @@ const translations: Record<Language, Record<string, string>> = {
     'home.backHome': 'Voltar ao Início',
     'home.complete': 'Completo',
     'home.draft': 'Rascunho',
+    'home.editPeriod': 'Alterar Período',
+    'home.periodExists': 'Já existe um fechamento para este período.',
 
     // History
     'history.title': 'Histórico Financeiro',
