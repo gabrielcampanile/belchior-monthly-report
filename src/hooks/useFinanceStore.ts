@@ -102,6 +102,7 @@ export function useFinanceStore() {
       spentPercentage,
       investedPercentage,
       expensesByCategory,
+      incomesByType,
     };
   }, [incomes, expenses]);
 
