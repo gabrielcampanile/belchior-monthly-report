@@ -85,12 +85,15 @@ export function useFinanceStore() {
       ? (totalInvestment / totalIncome) * 100 
       : 0;
 
-    const expensesByCategory = EXPENSE_CATEGORIES.reduce((acc, category) => {
-      acc[category] = expenses
-        .filter(e => e.category === category)
-        .reduce((sum, e) => sum + e.amount, 0);
-      return acc;
-    }, {} as Record<ExpenseCategory, number>);
+    const expensesByCategory: Record<string, number> = {};
+    expenses.forEach(e => {
+      expensesByCategory[e.category] = (expensesByCategory[e.category] || 0) + e.amount;
+    });
+
+    const incomesByType: Record<string, number> = {};
+    incomes.forEach(i => {
+      incomesByType[i.type] = (incomesByType[i.type] || 0) + i.amount;
+    });
 
     return {
       totalIncome,
