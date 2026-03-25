@@ -1,123 +1,144 @@
 
 
-# Funcionalidade de Acompanhamento de Investimentos
+# Redesign Completo - Fintech Premium
 
-## Conceito
+## Visao Geral
 
-Uma nova area dedicada para acompanhar a evolucao do patrimonio investido ao longo dos meses. O usuario registra o saldo total dos investimentos a cada mes, e o sistema calcula automaticamente o rendimento real com base na formula:
+Redesign completo da interface para transmitir sofisticacao de banco digital premium, mantendo o fluxo funcional existente. Dark mode com paleta refinada, tipografia premium, navegacao lateral compacta e visual inspirado em Nubank/XP.
+
+## Paleta de Cores (Nova)
 
 ```text
-Rendimento = Saldo Atual - (Saldo Mes Anterior + Aporte do Mes)
+Background:     #0A0A0F (quase preto azulado)
+Surface/Card:   #12121A (cards elevados)
+Surface-2:      #1A1A26 (cards secundarios)
+Border:         #1E1E2E (sutil)
+Primary:        #7C5CFC (roxo premium, estilo Nubank)
+Primary-light:  #9B7FFF
+Income/Green:   #00D47E
+Expense/Red:    #FF4D6A
+Investment:     #7C5CFC
+Muted text:     #6B6B80
+Foreground:     #F0F0F5
 ```
 
-Onde o **aporte do mes** e o valor investido calculado no fechamento mensal (receita - despesa).
+## Estrutura de Navegacao
 
----
+Trocar o Header atual por um **Sidebar compacta** (icones apenas, expandivel no hover) no desktop e **Bottom navigation** no mobile. Corrigir navegacao para usar `navigate(-1)` nos botoes de voltar em vez de `navigate('/')`.
 
-## 1. Nova tabela no banco de dados
-
-Criar tabela `investment_snapshots` para armazenar o saldo mensal de investimentos:
-
-- `id` (uuid, PK)
-- `user_id` (uuid, NOT NULL)
-- `month` (integer, NOT NULL)
-- `year` (integer, NOT NULL)
-- `balance` (numeric, NOT NULL) -- saldo total dos investimentos naquele mes
-- `contribution` (numeric, DEFAULT 0) -- aporte do mes (copiado do fechamento)
-- `created_at` / `updated_at` (timestamptz)
-- UNIQUE(user_id, month, year)
-- RLS: cada usuario ve/edita apenas seus proprios registros
-
----
-
-## 2. Nova pagina `/investments`
-
-Pagina dedicada com:
-
-- **Card de saldo atual**: ultimo saldo registrado com destaque
-- **Formulario de registro**: selecionar mes/ano e informar o saldo atual dos investimentos. Se houver fechamento do mes, o aporte e preenchido automaticamente (editavel).
-- **Tabela historica** com colunas:
-  - Periodo (mes/ano)
-  - Saldo
-  - Aporte do mes
-  - Rendimento (calculado)
-  - Rentabilidade % (rendimento / saldo anterior)
-- **Grafico de evolucao**: linha mostrando saldo ao longo dos meses, com barras empilhadas de aporte vs rendimento
-
----
-
-## 3. Hook `useInvestments`
-
-Novo hook para gerenciar os snapshots:
-
-- `fetchSnapshots()` -- busca todos os registros do usuario
-- `saveSnapshot(month, year, balance, contribution)` -- upsert
-- `deleteSnapshot(id)`
-- `getCalculatedData()` -- retorna array com rendimento e rentabilidade calculados para cada mes
-
-Logica de calculo:
 ```text
-Para cada mes (ordenado cronologicamente):
-  - Se primeiro mes: rendimento = 0
-  - Senão: rendimento = saldo_atual - (saldo_anterior + aporte_mes_atual)
-  - Rentabilidade % = rendimento / saldo_anterior * 100
+Desktop (sidebar esquerda):
+┌──┐──────────────────────────┐
+│🏠│                          │
+│📊│     Conteudo principal   │
+│⚙️│                          │
+│  │                          │
+│👤│                          │
+└──┘──────────────────────────┘
+
+Mobile (bottom nav):
+┌────────────────────────────┐
+│      Conteudo principal    │
+│                            │
+├────┬────┬────┬────┐
+│ 🏠 │ 📊 │ ⚙️ │ 👤 │
+└────┴────┴────┴────┘
 ```
 
----
+## Plano por Arquivo
 
-## 4. Integracao com fechamentos existentes
+### 1. `src/index.css` - Nova paleta e tokens
+- Substituir todas as variaveis CSS com nova paleta premium
+- Remover high-contrast (manter funcionalidade mas integrar melhor)
+- Adicionar gradientes sutis e sombras refinadas
+- Nova font-family: Inter (mais premium que DM Sans)
 
-Ao salvar um snapshot, se existir um fechamento mensal (`monthly_closures`) para o mesmo mes/ano, o campo `contribution` sera preenchido automaticamente com o `totalInvestment` (receita - despesa) daquele fechamento. O usuario pode ajustar manualmente caso o aporte real tenha sido diferente.
+### 2. `src/components/Layout.tsx` (NOVO)
+- Componente wrapper com sidebar + area de conteudo
+- Sidebar: logo, nav items (Home, Historico, Configuracoes), avatar + logout
+- Sidebar colapsada por padrao (56px), expande no hover (220px)
+- Mobile: bottom navigation bar fixa
+- Substitui o `<Header>` atual em todas as paginas
 
----
+### 3. `src/components/Header.tsx` - REMOVER
+- Toda a navegacao migra para o Layout/Sidebar
+- Remover props desnecessarias de categorias (eram usadas para o SettingsDialog antigo)
 
-## 5. Navegacao
+### 4. `src/pages/Auth.tsx` - Login premium
+- Fundo com gradiente sutil ou pattern
+- Card centralizado com glassmorphism leve
+- Logo maior e mais impactante
+- Botoes com hover refinado
 
-- Adicionar link "Investimentos" no Header ao lado de "Historico"
-- Adicionar rota `/investments` protegida no `App.tsx`
+### 5. `src/pages/Home.tsx` - Dashboard de closures
+- Remover Header, usar Layout
+- Cards de fechamento com design mais limpo: bordas sutis, hover com glow
+- Badges de status redesenhados (pill mais elegante)
+- Grid responsivo mantido
+- Botao "Novo Fechamento" com destaque visual premium
 
----
+### 6. `src/pages/Closure.tsx` - Wizard de fechamento
+- Usar Layout em vez de Header
+- **Corrigir navegacao**: botao voltar usa `navigate(-1)` em vez de `navigate('/')`
+- Step indicator redesenhado: mais fino, com linha conectora animada
+
+### 7. `src/components/StepIndicator.tsx` - Redesign
+- Design mais fino e elegante
+- Linha conectora com gradiente animado
+- Circulos menores, mais refinados
+
+### 8. `src/components/CSVImport.tsx` - Refinamento visual
+- Upload area com borda tracejada mais sutil
+- Preview table com design mais limpo
+- Cards de passos com visual mais flat
+
+### 9. `src/components/IncomeForm.tsx` - Refinamento
+- Tabela com linhas mais finas, hover sutil
+- Inputs mais refinados
+- Cores semanticas da nova paleta
+
+### 10. `src/components/ExpenseCategorization.tsx` - Refinamento
+- Mesmo tratamento da IncomeForm
+- Badges de categoria com pill design
+
+### 11. `src/components/Dashboard.tsx` - Summary premium
+- Metric cards com gradiente sutil no topo (barra colorida)
+- Pie charts com estilo mais refinado
+- Progress bar de gasto vs investido mais elegante
+
+### 12. `src/pages/History.tsx` - Refinamento
+- Usar Layout
+- Corrigir botao voltar para `navigate(-1)`
+- Tabela comparativa mais elegante
+
+### 13. `src/pages/Settings.tsx` - Refinamento
+- Usar Layout
+- Corrigir botao voltar para `navigate(-1)`
+- Cards mais limpos
+
+### 14. `src/components/ui/button.tsx` - Variantes premium
+- Variante `default` com gradiente sutil no primary
+- Hover states mais sofisticados
+
+### 15. Correcoes de Roteamento
+- Em **todos** os botoes "voltar", substituir `navigate('/')` por `navigate(-1)`
+- Paginas afetadas: `Closure.tsx`, `History.tsx`, `Settings.tsx`
+
+## Ordem de Implementacao
+
+1. `index.css` (tokens e paleta) + importar fonte Inter
+2. `Layout.tsx` (novo componente de navegacao)
+3. Atualizar todas as paginas para usar Layout e remover Header
+4. Corrigir navegacao (botoes voltar)
+5. Refinar componentes individuais (StepIndicator, CSVImport, Dashboard, etc.)
+6. Auth page
 
 ## Detalhes Tecnicos
 
-### Migracao SQL
-
-```sql
-CREATE TABLE investment_snapshots (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  month integer NOT NULL,
-  year integer NOT NULL,
-  balance numeric NOT NULL DEFAULT 0,
-  contribution numeric NOT NULL DEFAULT 0,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE(user_id, month, year)
-);
-
-ALTER TABLE investment_snapshots ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view own snapshots"
-  ON investment_snapshots FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert own snapshots"
-  ON investment_snapshots FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update own snapshots"
-  ON investment_snapshots FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete own snapshots"
-  ON investment_snapshots FOR DELETE USING (auth.uid() = user_id);
-
-CREATE TRIGGER update_investment_snapshots_updated_at
-  BEFORE UPDATE ON investment_snapshots
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-```
-
-### Arquivos a criar
-- `src/pages/Investments.tsx` -- pagina principal
-- `src/hooks/useInvestments.ts` -- hook de dados
-- `src/components/InvestmentChart.tsx` -- grafico de evolucao
-
-### Arquivos a modificar
-- `src/App.tsx` -- rota `/investments`
-- `src/components/Header.tsx` -- link de navegacao
-- `src/contexts/AppContext.tsx` -- traducoes (investments.*)
+- Manter Tailwind CSS, shadcn/ui, Recharts
+- Nenhuma mudanca de banco de dados necessaria
+- Nenhuma mudanca de logica de negocio - apenas visual e navegacao
+- Fonte Inter via Google Fonts CDN
+- Sidebar usa CSS transitions para expand/collapse
+- Mobile detection via `use-mobile.tsx` hook existente
 
