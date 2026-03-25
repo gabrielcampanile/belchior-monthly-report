@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Calculator, Mail, Lock, LogIn } from 'lucide-react';
+import { Wallet, Mail, Lock, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,72 +25,48 @@ export default function Auth() {
     );
   }
 
-  if (user) {
-    return <Navigate to="/" replace />;
-  }
+  if (user) return <Navigate to="/" replace />;
 
   const handleEmailLogin = async () => {
     setIsSubmitting(true);
-    try {
-      await signInWithEmail(email, password);
-    } catch (error: any) {
-      toast({
-        title: t('auth.error'),
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    try { await signInWithEmail(email, password); }
+    catch (error: any) { toast({ title: t('auth.error'), description: error.message, variant: 'destructive' }); }
+    finally { setIsSubmitting(false); }
   };
 
   const handleEmailSignup = async () => {
     setIsSubmitting(true);
     try {
       await signUpWithEmail(email, password);
-      toast({
-        title: t('auth.checkEmail'),
-        description: t('auth.checkEmailDesc'),
-      });
-    } catch (error: any) {
-      toast({
-        title: t('auth.error'),
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+      toast({ title: t('auth.checkEmail'), description: t('auth.checkEmailDesc') });
+    } catch (error: any) { toast({ title: t('auth.error'), description: error.message, variant: 'destructive' }); }
+    finally { setIsSubmitting(false); }
   };
 
   const handleGoogleLogin = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error: any) {
-      toast({
-        title: t('auth.error'),
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
+    try { await signInWithGoogle(); }
+    catch (error: any) { toast({ title: t('auth.error'), description: error.message, variant: 'destructive' }); }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center space-y-4">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Calculator className="h-7 w-7" />
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 relative overflow-hidden">
+      {/* Subtle background glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
+      
+      <Card className="w-full max-w-md border-border/40 bg-card/80 backdrop-blur-xl relative z-10">
+        <CardHeader className="text-center space-y-4 pb-2">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 text-primary">
+            <Wallet className="h-8 w-8" />
           </div>
           <div>
-            <CardTitle className="text-2xl">{t('app.title')}</CardTitle>
-            <CardDescription>{t('auth.subtitle')}</CardDescription>
+            <CardTitle className="text-2xl tracking-tight">{t('app.title')}</CardTitle>
+            <CardDescription className="mt-1">{t('auth.subtitle')}</CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-4">
           <Button
             variant="outline"
-            className="w-full h-12 text-base"
+            className="w-full h-12 text-base border-border/60 hover:bg-muted/50"
             onClick={handleGoogleLogin}
           >
             <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
@@ -104,7 +80,7 @@ export default function Auth() {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+              <span className="w-full border-t border-border/60" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-card px-2 text-muted-foreground">{t('auth.or')}</span>
@@ -112,7 +88,7 @@ export default function Auth() {
           </div>
 
           <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-2 bg-muted/50">
               <TabsTrigger value="login">{t('auth.login')}</TabsTrigger>
               <TabsTrigger value="signup">{t('auth.signup')}</TabsTrigger>
             </TabsList>
@@ -122,29 +98,14 @@ export default function Auth() {
                 <Label htmlFor="login-email">{t('auth.email')}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="login-email"
-                    type="email"
-                    placeholder="email@exemplo.com"
-                    className="pl-10"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
+                  <Input id="login-email" type="email" placeholder="email@exemplo.com" className="pl-10" value={email} onChange={(e) => setEmail(e.target.value)} />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="login-password">{t('auth.password')}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="login-password"
-                    type="password"
-                    placeholder="••••••••"
-                    className="pl-10"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin()}
-                  />
+                  <Input id="login-password" type="password" placeholder="••••••••" className="pl-10" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin()} />
                 </div>
               </div>
               <Button className="w-full" onClick={handleEmailLogin} disabled={isSubmitting}>
@@ -158,29 +119,14 @@ export default function Auth() {
                 <Label htmlFor="signup-email">{t('auth.email')}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    placeholder="email@exemplo.com"
-                    className="pl-10"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
+                  <Input id="signup-email" type="email" placeholder="email@exemplo.com" className="pl-10" value={email} onChange={(e) => setEmail(e.target.value)} />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-password">{t('auth.password')}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    placeholder="••••••••"
-                    className="pl-10"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleEmailSignup()}
-                  />
+                  <Input id="signup-password" type="password" placeholder="••••••••" className="pl-10" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleEmailSignup()} />
                 </div>
               </div>
               <Button className="w-full" onClick={handleEmailSignup} disabled={isSubmitting}>
