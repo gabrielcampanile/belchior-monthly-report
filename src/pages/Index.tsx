@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Header } from "@/components/Header";
+import { Layout } from "@/components/Layout";
 import { StepIndicator } from "@/components/StepIndicator";
 import { IncomeForm } from "@/components/IncomeForm";
 import { CSVImport } from "@/components/CSVImport";
@@ -23,152 +23,48 @@ const Index = () => {
   const { language } = useApp();
   const [currentStep, setCurrentStep] = useState(1);
   const {
-    incomes,
-    expenses,
-    summary,
-    addIncome,
-    removeIncome,
-    addExpenses,
-    updateExpenseCategory,
-    updateIncomeType,
-    removeExpense,
-    clearAllExpenses,
+    incomes, expenses, summary,
+    addIncome, removeIncome, addExpenses,
+    updateExpenseCategory, updateIncomeType, removeExpense, clearAllExpenses,
   } = useFinanceStore();
-  const { autoCategorize, autoCategorizeIncomes, rules, addRule, removeRule } =
-    useCategorizationRules();
-
+  const { autoCategorize, autoCategorizeIncomes, rules, addRule, removeRule } = useCategorizationRules();
   const {
-    categories,
-    incomeTypes,
-    addCategory,
-    removeCategory,
-    addIncomeType,
-    removeIncomeType,
-    isDefaultCategory,
-    isDefaultIncomeType,
-    getCategoryColor,
-    getIncomeTypeColor,
-    getCategoryDisplayName,
-    getIncomeTypeDisplayName,
+    categories, incomeTypes, addCategory, removeCategory,
+    addIncomeType, removeIncomeType, isDefaultCategory, isDefaultIncomeType,
+    getCategoryColor, getIncomeTypeColor, getCategoryDisplayName, getIncomeTypeDisplayName,
   } = useCategoryStore();
 
   const handleExportPDF = () => {
     try {
-      generatePDFReport(
-        summary,
-        incomes,
-        expenses,
-        new Date().getMonth() + 1,
-        new Date().getFullYear(),
-        language,
-      );
-      toast({
-        title: language === "pt" ? "Relatório Exportado" : "Report Exported",
-        description:
-          language === "pt"
-            ? "Seu relatório mensal foi baixado como PDF."
-            : "Your monthly report has been downloaded as PDF.",
-      });
-    } catch (error) {
-      toast({
-        title: language === "pt" ? "Exportação Falhou" : "Export Failed",
-        description:
-          language === "pt"
-            ? "Houve um erro ao gerar o PDF."
-            : "There was an error generating the PDF.",
-        variant: "destructive",
-      });
+      generatePDFReport(summary, incomes, expenses, new Date().getMonth() + 1, new Date().getFullYear(), language);
+      toast({ title: language === "pt" ? "Relatório Exportado" : "Report Exported", description: language === "pt" ? "Seu relatório mensal foi baixado como PDF." : "Your monthly report has been downloaded as PDF." });
+    } catch {
+      toast({ title: language === "pt" ? "Exportação Falhou" : "Export Failed", description: language === "pt" ? "Houve um erro ao gerar o PDF." : "There was an error generating the PDF.", variant: "destructive" });
     }
   };
 
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return (
-          <IncomeForm
-            incomes={incomes}
-            incomeTypes={incomeTypes}
-            onAddIncome={addIncome}
-            onRemoveIncome={removeIncome}
-            onUpdateIncomeType={updateIncomeType}
-            onNext={() => setCurrentStep(2)}
-            onBack={() => {}}
-            rules={rules}
-            onAddRule={addRule}
-            onRemoveRule={removeRule}
-          />
-        );
+        return <IncomeForm incomes={incomes} incomeTypes={incomeTypes} onAddIncome={addIncome} onRemoveIncome={removeIncome} onUpdateIncomeType={updateIncomeType} onNext={() => setCurrentStep(2)} onBack={() => {}} rules={rules} onAddRule={addRule} onRemoveRule={removeRule} />;
       case 2:
-        return (
-          <CSVImport
-            categories={categories}
-            onImport={(exps) => addExpenses(autoCategorize(exps))}
-            onImportIncomes={(newIncomes) => {
-              autoCategorizeIncomes(newIncomes).forEach((inc) =>
-                addIncome(inc),
-              );
-            }}
-            onNext={() => setCurrentStep(3)}
-            onBack={() => setCurrentStep(1)}
-            hasExpenses={expenses.length > 0}
-            onClearExpenses={clearAllExpenses}
-            expenseCount={expenses.length}
-            incomeCount={incomes.length}
-          />
-        );
+        return <CSVImport categories={categories} onImport={(exps) => addExpenses(autoCategorize(exps))} onImportIncomes={(newIncomes) => { autoCategorizeIncomes(newIncomes).forEach((inc) => addIncome(inc)); }} onNext={() => setCurrentStep(3)} onBack={() => setCurrentStep(1)} hasExpenses={expenses.length > 0} onClearExpenses={clearAllExpenses} expenseCount={expenses.length} incomeCount={incomes.length} />;
       case 3:
-        return (
-          <ExpenseCategorization
-            expenses={expenses}
-            categories={categories}
-            onUpdateCategory={updateExpenseCategory}
-            onRemoveExpense={removeExpense}
-            onAddExpenses={addExpenses}
-            onNext={() => setCurrentStep(4)}
-            onBack={() => setCurrentStep(2)}
-            rules={rules}
-            onAddRule={addRule}
-            onRemoveRule={removeRule}
-          />
-        );
+        return <ExpenseCategorization expenses={expenses} categories={categories} onUpdateCategory={updateExpenseCategory} onRemoveExpense={removeExpense} onAddExpenses={addExpenses} onNext={() => setCurrentStep(4)} onBack={() => setCurrentStep(2)} rules={rules} onAddRule={addRule} onRemoveRule={removeRule} />;
       case 4:
-        return (
-          <Dashboard
-            summary={summary}
-            onExportPDF={handleExportPDF}
-            onBack={() => setCurrentStep(3)}
-            getCategoryColor={getCategoryColor}
-            getIncomeTypeColor={getIncomeTypeColor}
-            getCategoryDisplayName={getCategoryDisplayName}
-            getIncomeTypeDisplayName={getIncomeTypeDisplayName}
-          />
-        );
+        return <Dashboard summary={summary} onExportPDF={handleExportPDF} onBack={() => setCurrentStep(3)} getCategoryColor={getCategoryColor} getIncomeTypeColor={getIncomeTypeColor} getCategoryDisplayName={getCategoryDisplayName} getIncomeTypeDisplayName={getIncomeTypeDisplayName} />;
       default:
         return null;
     }
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header
-        categories={categories}
-        incomeTypes={incomeTypes}
-        onAddCategory={addCategory}
-        onRemoveCategory={removeCategory}
-        onAddIncomeType={addIncomeType}
-        onRemoveIncomeType={removeIncomeType}
-        isDefaultCategory={isDefaultCategory}
-        isDefaultIncomeType={isDefaultIncomeType}
-      />
-      <main className="container mx-auto px-4 py-6 max-w-5xl">
-        <StepIndicator
-          steps={STEPS}
-          currentStep={currentStep}
-          onStepClick={setCurrentStep}
-        />
+    <Layout>
+      <div className="container mx-auto px-4 py-6 max-w-5xl">
+        <StepIndicator steps={STEPS} currentStep={currentStep} onStepClick={setCurrentStep} />
         <div className="mt-6">{renderStep()}</div>
-      </main>
-    </div>
+      </div>
+    </Layout>
   );
 };
 
