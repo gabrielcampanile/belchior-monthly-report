@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['DM Sans', 'sans-serif'],
+        sans: ['Inter', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
       colors: {
@@ -62,6 +62,10 @@ export default {
         investment: {
           DEFAULT: "hsl(var(--investment))",
           foreground: "hsl(var(--investment-foreground))",
+        },
+        surface: {
+          DEFAULT: "hsl(var(--surface))",
+          2: "hsl(var(--surface-2))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",

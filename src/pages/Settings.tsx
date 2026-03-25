@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Header } from '@/components/Header';
+import { Layout } from '@/components/Layout';
 import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useCategoryStore } from '@/hooks/useCategoryStore';
@@ -57,8 +57,7 @@ export default function Settings() {
     if (!over || active.id === over.id) return;
     const oldIndex = cs.categories.indexOf(active.id as string);
     const newIndex = cs.categories.indexOf(over.id as string);
-    const newOrder = arrayMove(cs.categories, oldIndex, newIndex);
-    cs.reorderCategories(newOrder);
+    cs.reorderCategories(arrayMove(cs.categories, oldIndex, newIndex));
   };
 
   const handleIncomeDragEnd = (event: DragEndEvent) => {
@@ -66,8 +65,7 @@ export default function Settings() {
     if (!over || active.id === over.id) return;
     const oldIndex = cs.incomeTypes.indexOf(active.id as string);
     const newIndex = cs.incomeTypes.indexOf(over.id as string);
-    const newOrder = arrayMove(cs.incomeTypes, oldIndex, newIndex);
-    cs.reorderIncomeTypes(newOrder);
+    cs.reorderIncomeTypes(arrayMove(cs.incomeTypes, oldIndex, newIndex));
   };
 
   const getDisplayCat = (name: string) => {
@@ -87,28 +85,18 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header
-        categories={cs.categories}
-        incomeTypes={cs.incomeTypes}
-        onAddCategory={cs.addCategory}
-        onRemoveCategory={cs.removeCategory}
-        onAddIncomeType={cs.addIncomeType}
-        onRemoveIncomeType={cs.removeIncomeType}
-        isDefaultCategory={cs.isDefaultCategory}
-        isDefaultIncomeType={cs.isDefaultIncomeType}
-      />
-      <main className="container mx-auto px-4 py-8 max-w-3xl">
+    <Layout>
+      <div className="container mx-auto px-4 py-8 max-w-3xl">
         <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h2 className="text-2xl font-bold text-foreground">{t('settings.pageTitle')}</h2>
+          <h2 className="text-2xl font-bold text-foreground tracking-tight">{t('settings.pageTitle')}</h2>
         </div>
 
         <div className="space-y-6">
           {/* Profile */}
-          <Card className="border-border/50">
+          <Card className="border-border/40 bg-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5 text-primary" />
@@ -118,7 +106,7 @@ export default function Settings() {
             <CardContent className="flex items-center gap-4">
               <Avatar className="h-16 w-16">
                 <AvatarImage src={avatarUrl} />
-                <AvatarFallback className="text-lg">{initials}</AvatarFallback>
+                <AvatarFallback className="text-lg bg-muted">{initials}</AvatarFallback>
               </Avatar>
               <div>
                 <p className="font-semibold text-foreground text-lg">{displayName}</p>
@@ -128,7 +116,7 @@ export default function Settings() {
           </Card>
 
           {/* Expense Categories */}
-          <Card className="border-border/50">
+          <Card className="border-border/40 bg-card">
             <CardHeader>
               <CardTitle>{t('settings.manageCategories')}</CardTitle>
               <CardDescription>{t('categories.subtitle')}</CardDescription>
@@ -155,7 +143,7 @@ export default function Settings() {
                       const color = cs.getCategoryColor(category);
                       return (
                         <SortableItem key={category} id={category}>
-                          <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50 w-full">
+                          <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 w-full">
                             {editingCat === category ? (
                               <div className="flex items-center gap-2 flex-1">
                                 <Input value={editCatValue} onChange={e => setEditCatValue(e.target.value)} className="h-7 text-sm" onKeyDown={e => { if (e.key === 'Enter') { cs.editCategory(category, editCatValue.trim()); setEditingCat(null); }}} autoFocus />
@@ -165,8 +153,8 @@ export default function Settings() {
                             ) : (
                               <>
                                 <span className="flex items-center gap-2">
-                                  <button className="w-4 h-4 rounded-full border border-border/50 cursor-pointer flex-shrink-0" style={{ backgroundColor: color }} onClick={() => { const idx = PRESET_COLORS.indexOf(color); cs.updateCategoryColor(category, PRESET_COLORS[(idx + 1) % PRESET_COLORS.length]); }} title={language === 'pt' ? 'Clique para mudar a cor' : 'Click to change color'} />
-                                  {getDisplayCat(category)}
+                                  <button className="w-4 h-4 rounded-full border border-border/50 cursor-pointer flex-shrink-0" style={{ backgroundColor: color }} onClick={() => { const idx = PRESET_COLORS.indexOf(color); cs.updateCategoryColor(category, PRESET_COLORS[(idx + 1) % PRESET_COLORS.length]); }} />
+                                  <span className="text-sm">{getDisplayCat(category)}</span>
                                   {cs.isDefaultCategory(category) && <Badge variant="secondary" className="text-xs">Default</Badge>}
                                 </span>
                                 <div className="flex items-center gap-1">
@@ -188,7 +176,7 @@ export default function Settings() {
           </Card>
 
           {/* Income Types */}
-          <Card className="border-border/50">
+          <Card className="border-border/40 bg-card">
             <CardHeader>
               <CardTitle>{t('settings.manageIncomeTypes')}</CardTitle>
             </CardHeader>
@@ -214,7 +202,7 @@ export default function Settings() {
                       const color = cs.getIncomeTypeColor(type);
                       return (
                         <SortableItem key={type} id={type}>
-                          <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50 w-full">
+                          <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 w-full">
                             {editingInc === type ? (
                               <div className="flex items-center gap-2 flex-1">
                                 <Input value={editIncValue} onChange={e => setEditIncValue(e.target.value)} className="h-7 text-sm" onKeyDown={e => { if (e.key === 'Enter') { cs.editIncomeType(type, editIncValue.trim()); setEditingInc(null); }}} autoFocus />
@@ -224,8 +212,8 @@ export default function Settings() {
                             ) : (
                               <>
                                 <span className="flex items-center gap-2">
-                                  <button className="w-4 h-4 rounded-full border border-border/50 cursor-pointer flex-shrink-0" style={{ backgroundColor: color }} onClick={() => { const idx = PRESET_COLORS.indexOf(color); cs.updateIncomeTypeColor(type, PRESET_COLORS[(idx + 1) % PRESET_COLORS.length]); }} title={language === 'pt' ? 'Clique para mudar a cor' : 'Click to change color'} />
-                                  {getDisplayInc(type)}
+                                  <button className="w-4 h-4 rounded-full border border-border/50 cursor-pointer flex-shrink-0" style={{ backgroundColor: color }} onClick={() => { const idx = PRESET_COLORS.indexOf(color); cs.updateIncomeTypeColor(type, PRESET_COLORS[(idx + 1) % PRESET_COLORS.length]); }} />
+                                  <span className="text-sm">{getDisplayInc(type)}</span>
                                   {cs.isDefaultIncomeType(type) && <Badge variant="secondary" className="text-xs">Default</Badge>}
                                 </span>
                                 <div className="flex items-center gap-1">
@@ -247,7 +235,7 @@ export default function Settings() {
           </Card>
 
           {/* Preferences */}
-          <Card className="border-border/50">
+          <Card className="border-border/40 bg-card">
             <CardHeader>
               <CardTitle>{t('settings.preferences')}</CardTitle>
             </CardHeader>
@@ -272,7 +260,7 @@ export default function Settings() {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+      </div>
+    </Layout>
   );
 }

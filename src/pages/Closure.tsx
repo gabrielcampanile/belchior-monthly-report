@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { Header } from '@/components/Header';
+import { Layout } from '@/components/Layout';
 import { StepIndicator } from '@/components/StepIndicator';
 import { IncomeForm } from '@/components/IncomeForm';
 import { CSVImport } from '@/components/CSVImport';
@@ -13,7 +13,7 @@ import { useCategorizationRules } from '@/hooks/useCategorizationRules';
 import { generatePDFReport } from '@/lib/pdfExport';
 import { toast } from '@/hooks/use-toast';
 import { useApp } from '@/contexts/AppContext';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const STEPS = [
@@ -50,12 +50,10 @@ export default function Closure() {
   const { saveClosure, loadClosure } = useClosures();
   const { autoCategorize, autoCategorizeIncomes, rules, addRule, removeRule } = useCategorizationRules();
 
-  // Load existing closure data
   useEffect(() => {
     if (!id) return;
     (async () => {
       try {
-        // Fetch closure metadata
         const { data: closureMeta } = await (await import('@/integrations/supabase/client')).supabase
           .from('monthly_closures')
           .select('month, year')
@@ -84,27 +82,19 @@ export default function Closure() {
     try {
       await saveClosure(closureMonth, closureYear, incomes, expenses, summary);
     } catch (err: any) {
-      toast({
-        title: t('auth.error'),
-        description: err.message,
-        variant: 'destructive',
-      });
+      toast({ title: t('auth.error'), description: err.message, variant: 'destructive' });
     } finally {
       setSaving(false);
     }
   };
 
-  // Auto-save when data changes (debounced)
   useEffect(() => {
     if (loadingData || (!incomes.length && !expenses.length)) return;
     if (!closureMonth || !closureYear) return;
 
     if (autoSaveTimer) clearTimeout(autoSaveTimer);
-    const timer = setTimeout(() => {
-      handleSave();
-    }, 2000);
+    const timer = setTimeout(() => { handleSave(); }, 2000);
     setAutoSaveTimer(timer);
-
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [incomes, expenses, closureMonth, closureYear]);
@@ -127,12 +117,11 @@ export default function Closure() {
 
   if (loadingData) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header {...categoryStore} onAddCategory={categoryStore.addCategory} onRemoveCategory={categoryStore.removeCategory} onAddIncomeType={categoryStore.addIncomeType} onRemoveIncomeType={categoryStore.removeIncomeType} isDefaultCategory={categoryStore.isDefaultCategory} isDefaultIncomeType={categoryStore.isDefaultIncomeType} />
+      <Layout>
         <div className="flex justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </div>
+      </Layout>
     );
   }
 
@@ -149,10 +138,7 @@ export default function Closure() {
             onNext={() => setCurrentStep(2)}
             onBack={() => {}}
             hasExpenses={expenses.length > 0 || incomes.length > 0}
-            onClearExpenses={() => {
-              clearAllExpenses();
-              setIncomes([]);
-            }}
+            onClearExpenses={() => { clearAllExpenses(); setIncomes([]); }}
             expenseCount={expenses.length}
             incomeCount={incomes.length}
           />
@@ -209,35 +195,22 @@ export default function Closure() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header
-        categories={categoryStore.categories}
-        incomeTypes={categoryStore.incomeTypes}
-        onAddCategory={categoryStore.addCategory}
-        onRemoveCategory={categoryStore.removeCategory}
-        onAddIncomeType={categoryStore.addIncomeType}
-        onRemoveIncomeType={categoryStore.removeIncomeType}
-        isDefaultCategory={categoryStore.isDefaultCategory}
-        isDefaultIncomeType={categoryStore.isDefaultIncomeType}
-      />
-      <main className="container mx-auto px-4 py-6 max-w-5xl">
+    <Layout>
+      <div className="container mx-auto px-4 py-6 max-w-5xl">
         <div className="flex items-center justify-between mb-4">
-          <Button variant="ghost" onClick={() => navigate('/')}>
-            ← {t('home.backHome')}
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1.5 text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="h-4 w-4" />
+            {t('home.backHome')}
           </Button>
           <span className="text-sm text-muted-foreground font-medium capitalize">
             {closureMonth}/{closureYear}
           </span>
         </div>
-        <StepIndicator
-          steps={STEPS}
-          currentStep={currentStep}
-          onStepClick={setCurrentStep}
-        />
+        <StepIndicator steps={STEPS} currentStep={currentStep} onStepClick={setCurrentStep} />
         <div className="mt-6">
           {renderStep()}
         </div>
-      </main>
-    </div>
+      </div>
+    </Layout>
   );
 }
