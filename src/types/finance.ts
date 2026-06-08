@@ -1,4 +1,4 @@
-export type IncomeType = 'Salary' | 'Freelance' | 'Other';
+export type IncomeType = 'Salary' | 'Freelance' | 'Blablacar' | 'Other';
 
 export interface IncomeEntry {
   id: string;
@@ -49,7 +49,7 @@ export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
   'Other',
 ];
 
-export const INCOME_TYPES: IncomeType[] = ['Salary', 'Freelance', 'Other'];
+export const INCOME_TYPES: IncomeType[] = ['Salary', 'Freelance', 'Blablacar', 'Other'];
 
 export const CATEGORY_COLORS: Record<ExpenseCategory, string> = {
   'Food': '#22c55e',
