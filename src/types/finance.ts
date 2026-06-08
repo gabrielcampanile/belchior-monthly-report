@@ -1,4 +1,4 @@
-export type IncomeType = 'Salary' | 'Freelance' | 'Other';
+export type IncomeType = 'Salary' | 'Freelance' | 'Blablacar' | 'Other';
 
 export interface IncomeEntry {
   id: string;
