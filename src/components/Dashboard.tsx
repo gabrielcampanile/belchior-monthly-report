@@ -125,34 +125,34 @@ export function Dashboard({ summary, onExportPDF, onBack, getCategoryColor, getI
         </Card>
 
         <Card className="border-border/50 overflow-hidden">
-          <div className="h-1 bg-investment" />
+          <div className={`h-1 ${summary.totalInvestment < 0 ? 'bg-expense' : 'bg-investment'}`} />
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">{t('dashboard.netInvestment')}</p>
-                <p className="text-2xl font-bold font-mono text-investment">
+                <p className={`text-2xl font-bold font-mono ${summary.totalInvestment < 0 ? 'text-expense' : 'text-investment'}`}>
                   {formatCurrency(summary.totalInvestment, language)}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-full bg-investment/10 flex items-center justify-center">
-                <PiggyBank className="w-6 h-6 text-investment" />
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${summary.totalInvestment < 0 ? 'bg-expense/10' : 'bg-investment/10'}`}>
+                <PiggyBank className={`w-6 h-6 ${summary.totalInvestment < 0 ? 'text-expense' : 'text-investment'}`} />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-border/50 overflow-hidden">
-          <div className="h-1 bg-primary" />
+          <div className={`h-1 ${summary.investedPercentage < 0 ? 'bg-expense' : 'bg-primary'}`} />
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">{t('dashboard.invested')}</p>
-                <p className="text-2xl font-bold font-mono text-primary">
+                <p className={`text-2xl font-bold font-mono ${summary.investedPercentage < 0 ? 'text-expense' : 'text-primary'}`}>
                   {formatPercent(summary.investedPercentage)}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Percent className="w-6 h-6 text-primary" />
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${summary.investedPercentage < 0 ? 'bg-expense/10' : 'bg-primary/10'}`}>
+                <Percent className={`w-6 h-6 ${summary.investedPercentage < 0 ? 'text-expense' : 'text-primary'}`} />
               </div>
             </div>
           </CardContent>
@@ -173,9 +173,9 @@ export function Dashboard({ summary, onExportPDF, onBack, getCategoryColor, getI
               >
                 {summary.spentPercentage > 10 && t('dashboard.spent')}
               </div>
-              <div 
+              <div
                 className="bg-investment flex items-center justify-center text-xs font-medium text-investment-foreground transition-all duration-500"
-                style={{ width: `${Math.min(summary.investedPercentage, 100)}%` }}
+                style={{ width: `${Math.max(0, Math.min(summary.investedPercentage, 100))}%` }}
               >
                 {summary.investedPercentage > 10 && t('dashboard.invested')}
               </div>
