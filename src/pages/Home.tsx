@@ -223,11 +223,11 @@ export default function Home() {
                       </p>
                     </div>
                     <div className="space-y-1">
-                      <div className="flex items-center gap-1.5 text-investment">
+                      <div className={`flex items-center gap-1.5 ${closure.totalInvestment < 0 ? 'text-expense' : 'text-investment'}`}>
                         <PiggyBank className="h-3.5 w-3.5" />
                         <span className="text-[11px] text-muted-foreground">{t('dashboard.netInvestment')}</span>
                       </div>
-                      <p className="font-mono font-bold text-base text-investment">
+                      <p className={`font-mono font-bold text-base ${closure.totalInvestment < 0 ? 'text-expense' : 'text-investment'}`}>
                         {formatCurrency(closure.totalInvestment, language)}
                       </p>
                       <p className="text-[10px] text-muted-foreground font-mono">
