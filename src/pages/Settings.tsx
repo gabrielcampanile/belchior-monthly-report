@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Layout } from '@/components/Layout';
 import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -153,7 +154,18 @@ export default function Settings() {
                             ) : (
                               <>
                                 <span className="flex items-center gap-2">
-                                  <button className="w-4 h-4 rounded-full border border-border/50 cursor-pointer flex-shrink-0" style={{ backgroundColor: color }} onClick={() => { const idx = PRESET_COLORS.indexOf(color); cs.updateCategoryColor(category, PRESET_COLORS[(idx + 1) % PRESET_COLORS.length]); }} />
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <button className="w-4 h-4 rounded-full border border-border/50 cursor-pointer flex-shrink-0" style={{ backgroundColor: color }} title={language === 'pt' ? 'Alterar cor' : 'Change color'} />
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-2">
+                                      <div className="grid grid-cols-5 gap-1.5">
+                                        {PRESET_COLORS.map(c => (
+                                          <button key={c} className={`w-6 h-6 rounded-full border-2 transition-all ${color === c ? 'border-foreground scale-110' : 'border-transparent'}`} style={{ backgroundColor: c }} onClick={() => cs.updateCategoryColor(category, c)} />
+                                        ))}
+                                      </div>
+                                    </PopoverContent>
+                                  </Popover>
                                   <span className="text-sm">{getDisplayCat(category)}</span>
                                   {cs.isDefaultCategory(category) && <Badge variant="secondary" className="text-xs">Default</Badge>}
                                 </span>
@@ -212,7 +224,18 @@ export default function Settings() {
                             ) : (
                               <>
                                 <span className="flex items-center gap-2">
-                                  <button className="w-4 h-4 rounded-full border border-border/50 cursor-pointer flex-shrink-0" style={{ backgroundColor: color }} onClick={() => { const idx = PRESET_COLORS.indexOf(color); cs.updateIncomeTypeColor(type, PRESET_COLORS[(idx + 1) % PRESET_COLORS.length]); }} />
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <button className="w-4 h-4 rounded-full border border-border/50 cursor-pointer flex-shrink-0" style={{ backgroundColor: color }} title={language === 'pt' ? 'Alterar cor' : 'Change color'} />
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-2">
+                                      <div className="grid grid-cols-5 gap-1.5">
+                                        {PRESET_COLORS.map(c => (
+                                          <button key={c} className={`w-6 h-6 rounded-full border-2 transition-all ${color === c ? 'border-foreground scale-110' : 'border-transparent'}`} style={{ backgroundColor: c }} onClick={() => cs.updateIncomeTypeColor(type, c)} />
+                                        ))}
+                                      </div>
+                                    </PopoverContent>
+                                  </Popover>
                                   <span className="text-sm">{getDisplayInc(type)}</span>
                                   {cs.isDefaultIncomeType(type) && <Badge variant="secondary" className="text-xs">Default</Badge>}
                                 </span>
