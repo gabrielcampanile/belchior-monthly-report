@@ -59,6 +59,7 @@ interface IncomeFormProps {
   onAddRule?: (keyword: string, category: string) => Promise<void>;
   onRemoveRule?: (id: string) => Promise<void>;
   getIncomeTypeColor?: (name: string) => string;
+  getIncomeTypeDisplayName?: (name: string) => string;
   onReorder?: (fromIndex: number, toIndex: number) => void;
 }
 
@@ -74,6 +75,7 @@ export function IncomeForm({
   onAddRule,
   onRemoveRule,
   getIncomeTypeColor,
+  getIncomeTypeDisplayName,
   onReorder,
 }: IncomeFormProps) {
   const { language, t } = useApp();
@@ -112,6 +114,10 @@ export function IncomeForm({
   };
 
   const getTranslatedType = (incomeType: string) => {
+    if (getIncomeTypeDisplayName) {
+      const display = getIncomeTypeDisplayName(incomeType);
+      if (display && display !== incomeType) return display;
+    }
     const key = `incomeType.${incomeType}`;
     const translated = t(key);
     return translated !== key ? translated : incomeType;
