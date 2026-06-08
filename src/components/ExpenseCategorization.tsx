@@ -63,6 +63,7 @@ interface ExpenseCategorizationProps {
   onAddRule: (keyword: string, category: string) => Promise<void>;
   onRemoveRule: (id: string) => Promise<void>;
   getCategoryColor?: (name: string) => string;
+  getCategoryDisplayName?: (name: string) => string;
   onReorder?: (fromIndex: number, toIndex: number) => void;
 }
 
@@ -78,6 +79,7 @@ export function ExpenseCategorization({
   onAddRule,
   onRemoveRule,
   getCategoryColor: getCategoryColorProp,
+  getCategoryDisplayName,
   onReorder,
 }: ExpenseCategorizationProps) {
   const { language, t } = useApp();
@@ -107,6 +109,10 @@ export function ExpenseCategorization({
   ).length;
 
   const getTranslatedCategory = (category: string) => {
+    if (getCategoryDisplayName) {
+      const display = getCategoryDisplayName(category);
+      if (display && display !== category) return display;
+    }
     const key = `category.${category}`;
     const translated = t(key);
     return translated !== key ? translated : category;
