@@ -9,6 +9,7 @@ const DEFAULT_INCOME_TYPES: IncomeType[] = [...INCOME_TYPES];
 const DEFAULT_INCOME_COLORS: Record<string, string> = {
   'Salary': '#22c55e',
   'Freelance': '#3b82f6',
+  'Blablacar': '#f59e0b',
   'Other': '#6b7280',
 };
 

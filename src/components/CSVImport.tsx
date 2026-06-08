@@ -149,7 +149,7 @@ export function CSVImport({ categories, onImport, onImportIncomes, onNext, onBac
           incomes.push({
             date: r.date,
             source: r.description,
-            type: 'Other',
+            type: 'Blablacar',
             amount: r.rawAmount,
           });
         }
