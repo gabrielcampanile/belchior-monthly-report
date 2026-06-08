@@ -75,13 +75,13 @@ export function useFinanceStore() {
   const summary: FinancialSummary = useMemo(() => {
     const totalIncome = incomes.reduce((sum, i) => sum + i.amount, 0);
     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-    const totalInvestment = Math.max(0, totalIncome - totalExpenses);
-    
-    const spentPercentage = totalIncome > 0 
-      ? (totalExpenses / totalIncome) * 100 
+    const totalInvestment = totalIncome - totalExpenses;
+
+    const spentPercentage = totalIncome > 0
+      ? (totalExpenses / totalIncome) * 100
       : 0;
-    const investedPercentage = totalIncome > 0 
-      ? (totalInvestment / totalIncome) * 100 
+    const investedPercentage = totalIncome > 0
+      ? (totalInvestment / totalIncome) * 100
       : 0;
 
     const expensesByCategory: Record<string, number> = {};
