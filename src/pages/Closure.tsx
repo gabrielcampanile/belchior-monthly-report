@@ -157,6 +157,7 @@ export default function Closure() {
             onAddRule={addRule}
             onRemoveRule={removeRule}
             getIncomeTypeColor={categoryStore.getIncomeTypeColor}
+            getIncomeTypeDisplayName={categoryStore.getIncomeTypeDisplayName}
             onReorder={reorderIncomes}
           />
         );
@@ -174,6 +175,7 @@ export default function Closure() {
             onAddRule={addRule}
             onRemoveRule={removeRule}
             getCategoryColor={categoryStore.getCategoryColor}
+            getCategoryDisplayName={categoryStore.getCategoryDisplayName}
             onReorder={reorderExpenses}
           />
         );
