@@ -139,7 +139,7 @@ export default function Settings() {
               </div>
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCategoryDragEnd}>
                 <SortableContext items={cs.categories} strategy={verticalListSortingStrategy}>
-                  <div className="space-y-2">
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
                     {cs.categories.map(category => {
                       const color = cs.getCategoryColor(category);
                       return (
@@ -209,7 +209,7 @@ export default function Settings() {
               </div>
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleIncomeDragEnd}>
                 <SortableContext items={cs.incomeTypes} strategy={verticalListSortingStrategy}>
-                  <div className="space-y-2">
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
                     {cs.incomeTypes.map(type => {
                       const color = cs.getIncomeTypeColor(type);
                       return (

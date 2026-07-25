@@ -1,1 +1,0 @@
-delete from public.user_categories where name='TesteXYZ';
