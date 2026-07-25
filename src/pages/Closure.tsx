@@ -101,7 +101,10 @@ export default function Closure() {
 
   const handleExportPDF = () => {
     try {
-      generatePDFReport(summary, incomes, expenses, closureMonth, closureYear, language);
+      generatePDFReport(summary, incomes, expenses, closureMonth, closureYear, language, {
+        getCategoryDisplayName: categoryStore.getCategoryDisplayName,
+        getIncomeTypeDisplayName: categoryStore.getIncomeTypeDisplayName,
+      });
       toast({
         title: language === 'pt' ? 'Relatório Exportado' : 'Report Exported',
         description: language === 'pt' ? 'Seu relatório mensal foi baixado como PDF.' : 'Your monthly report has been downloaded as PDF.',

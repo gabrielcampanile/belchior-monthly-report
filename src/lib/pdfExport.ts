@@ -1,6 +1,11 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { FinancialSummary, EXPENSE_CATEGORIES, CATEGORY_COLORS, IncomeEntry, ExpenseEntry } from '@/types/finance';
+import { FinancialSummary, IncomeEntry, ExpenseEntry } from '@/types/finance';
+
+interface PDFLabels {
+  getCategoryDisplayName?: (name: string) => string;
+  getIncomeTypeDisplayName?: (name: string) => string;
+}
 
 export function generatePDFReport(
   summary: FinancialSummary,
@@ -8,9 +13,12 @@ export function generatePDFReport(
   expenses: ExpenseEntry[],
   month: number,
   year: number,
-  language: 'en' | 'pt' = 'pt'
+  language: 'en' | 'pt' = 'pt',
+  labels: PDFLabels = {}
 ): void {
   const doc = new jsPDF();
+  const catName = (c: string) => labels.getCategoryDisplayName?.(c) || c;
+  const typeName = (t: string) => labels.getIncomeTypeDisplayName?.(t) || t;
 
   const locale = language === 'pt' ? 'pt-BR' : 'en-US';
   const currency = language === 'pt' ? 'BRL' : 'USD';
@@ -65,21 +73,47 @@ export function generatePDFReport(
   doc.setTextColor(40, 40, 40);
   doc.text(language === 'pt' ? 'Fontes de Renda' : 'Income Sources', 20, incomeStartY);
 
-  const incomeData = incomes.map(income => [
-    income.source,
-    income.type,
-    formatCurrency(income.amount),
-  ]);
+  // Income grouped by type (summary)
+  const incomeTypeTotals = incomes.reduce<Record<string, number>>((acc, i) => {
+    acc[i.type] = (acc[i.type] || 0) + i.amount;
+    return acc;
+  }, {});
+  const incomeTypeRows = Object.entries(incomeTypeTotals)
+    .sort((a, b) => b[1] - a[1])
+    .map(([type, amount]) => [
+      typeName(type),
+      formatCurrency(amount),
+      formatPercent(summary.totalIncome > 0 ? (amount / summary.totalIncome) * 100 : 0),
+    ]);
 
   autoTable(doc, {
     startY: incomeStartY + 5,
-    head: [[language === 'pt' ? 'Fonte' : 'Source', language === 'pt' ? 'Tipo' : 'Type', language === 'pt' ? 'Valor' : 'Amount']],
-    body: incomeData,
+    head: [[language === 'pt' ? 'Tipo' : 'Type', language === 'pt' ? 'Valor' : 'Amount', language === 'pt' ? '% do Total' : '% of Total']],
+    body: incomeTypeRows,
     theme: 'striped',
     headStyles: { fillColor: [34, 197, 94] },
     styles: { fontSize: 10 },
-    columnStyles: { 2: { halign: 'right' } },
+    columnStyles: { 1: { halign: 'right', fontStyle: 'bold' }, 2: { halign: 'right' } },
   });
+
+  // Income detail grouped by type
+  Object.keys(incomeTypeTotals)
+    .sort((a, b) => incomeTypeTotals[b] - incomeTypeTotals[a])
+    .forEach(type => {
+      const startY = (doc as any).lastAutoTable.finalY + 10;
+      doc.setFontSize(12);
+      doc.setTextColor(40, 40, 40);
+      doc.text(`${typeName(type)} — ${formatCurrency(incomeTypeTotals[type])}`, 20, startY);
+      autoTable(doc, {
+        startY: startY + 3,
+        head: [[language === 'pt' ? 'Fonte' : 'Source', language === 'pt' ? 'Valor' : 'Amount']],
+        body: incomes.filter(i => i.type === type).map(i => [i.source, formatCurrency(i.amount)]),
+        theme: 'grid',
+        headStyles: { fillColor: [34, 197, 94] },
+        styles: { fontSize: 9 },
+        columnStyles: { 1: { halign: 'right' } },
+      });
+    });
 
   // Expenses by Category Section
   const categoryStartY = (doc as any).lastAutoTable.finalY + 15;
@@ -87,28 +121,60 @@ export function generatePDFReport(
   doc.setTextColor(40, 40, 40);
   doc.text(language === 'pt' ? 'Despesas por Categoria' : 'Expenses by Category', 20, categoryStartY);
 
-  const categoryData = EXPENSE_CATEGORIES
-    .filter(cat => summary.expensesByCategory[cat] > 0)
-    .sort((a, b) => summary.expensesByCategory[b] - summary.expensesByCategory[a])
-    .map(cat => {
-      const amount = summary.expensesByCategory[cat];
-      const percentage = summary.totalExpenses > 0 
-        ? (amount / summary.totalExpenses) * 100 
-        : 0;
-      return [cat, formatCurrency(amount), formatPercent(percentage)];
-    });
+  const categoryTotals = expenses.reduce<Record<string, number>>((acc, e) => {
+    acc[e.category] = (acc[e.category] || 0) + e.amount;
+    return acc;
+  }, {});
+  const sortedCategories = Object.keys(categoryTotals).sort((a, b) => categoryTotals[b] - categoryTotals[a]);
+
+  const categoryData = sortedCategories.map(cat => [
+    catName(cat),
+    formatCurrency(categoryTotals[cat]),
+    formatPercent(summary.totalExpenses > 0 ? (categoryTotals[cat] / summary.totalExpenses) * 100 : 0),
+  ]);
 
   autoTable(doc, {
     startY: categoryStartY + 5,
-    head: [[language === 'pt' ? 'Categoria' : 'Category', language === 'pt' ? 'Valor' : 'Amount', '% do Total']],
+    head: [[language === 'pt' ? 'Categoria' : 'Category', language === 'pt' ? 'Valor' : 'Amount', language === 'pt' ? '% do Total' : '% of Total']],
     body: categoryData,
     theme: 'striped',
     headStyles: { fillColor: [239, 68, 68] },
     styles: { fontSize: 10 },
-    columnStyles: { 
-      1: { halign: 'right' },
+    columnStyles: {
+      1: { halign: 'right', fontStyle: 'bold' },
       2: { halign: 'right' },
     },
+  });
+
+  // Expense detail grouped by category
+  if (sortedCategories.length) {
+    const detailY = (doc as any).lastAutoTable.finalY + 15;
+    doc.setFontSize(16);
+    doc.setTextColor(40, 40, 40);
+    doc.text(language === 'pt' ? 'Detalhamento por Categoria' : 'Breakdown by Category', 20, detailY);
+    (doc as any).lastAutoTable.finalY = detailY;
+  }
+
+  sortedCategories.forEach(cat => {
+    const startY = (doc as any).lastAutoTable.finalY + 10;
+    doc.setFontSize(12);
+    doc.setTextColor(40, 40, 40);
+    doc.text(`${catName(cat)} — ${formatCurrency(categoryTotals[cat])}`, 20, startY);
+    autoTable(doc, {
+      startY: startY + 3,
+      head: [[
+        language === 'pt' ? 'Data' : 'Date',
+        language === 'pt' ? 'Descrição' : 'Description',
+        language === 'pt' ? 'Valor' : 'Amount',
+      ]],
+      body: expenses
+        .filter(e => e.category === cat)
+        .map(e => [e.date, e.description, formatCurrency(e.amount)]),
+      theme: 'grid',
+      headStyles: { fillColor: [239, 68, 68] },
+      styles: { fontSize: 9 },
+      columnStyles: { 2: { halign: 'right' } },
+    });
   });
 
   // Footer
