@@ -96,25 +96,6 @@ export function generatePDFReport(
     columnStyles: { 1: { halign: 'right', fontStyle: 'bold' }, 2: { halign: 'right' } },
   });
 
-  // Income detail grouped by type
-  Object.keys(incomeTypeTotals)
-    .sort((a, b) => incomeTypeTotals[b] - incomeTypeTotals[a])
-    .forEach(type => {
-      const startY = (doc as any).lastAutoTable.finalY + 10;
-      doc.setFontSize(12);
-      doc.setTextColor(40, 40, 40);
-      doc.text(`${typeName(type)} — ${formatCurrency(incomeTypeTotals[type])}`, 20, startY);
-      autoTable(doc, {
-        startY: startY + 3,
-        head: [[language === 'pt' ? 'Fonte' : 'Source', language === 'pt' ? 'Valor' : 'Amount']],
-        body: incomes.filter(i => i.type === type).map(i => [i.source, formatCurrency(i.amount)]),
-        theme: 'grid',
-        headStyles: { fillColor: [34, 197, 94] },
-        styles: { fontSize: 9 },
-        columnStyles: { 1: { halign: 'right' } },
-      });
-    });
-
   // Expenses by Category Section
   const categoryStartY = (doc as any).lastAutoTable.finalY + 15;
   doc.setFontSize(16);
@@ -146,12 +127,40 @@ export function generatePDFReport(
     },
   });
 
+  // Details: incomes grouped by type
+  const sortedIncomeTypes = Object.keys(incomeTypeTotals)
+    .sort((a, b) => incomeTypeTotals[b] - incomeTypeTotals[a]);
+
+  if (sortedIncomeTypes.length) {
+    const incomeDetailY = (doc as any).lastAutoTable.finalY + 15;
+    doc.setFontSize(16);
+    doc.setTextColor(40, 40, 40);
+    doc.text(language === 'pt' ? 'Detalhamento de Rendas' : 'Income Breakdown', 20, incomeDetailY);
+    (doc as any).lastAutoTable.finalY = incomeDetailY;
+  }
+
+  sortedIncomeTypes.forEach(type => {
+    const startY = (doc as any).lastAutoTable.finalY + 10;
+    doc.setFontSize(12);
+    doc.setTextColor(40, 40, 40);
+    doc.text(`${typeName(type)} — ${formatCurrency(incomeTypeTotals[type])}`, 20, startY);
+    autoTable(doc, {
+      startY: startY + 3,
+      head: [[language === 'pt' ? 'Fonte' : 'Source', language === 'pt' ? 'Valor' : 'Amount']],
+      body: incomes.filter(i => i.type === type).map(i => [i.source, formatCurrency(i.amount)]),
+      theme: 'grid',
+      headStyles: { fillColor: [34, 197, 94] },
+      styles: { fontSize: 9 },
+      columnStyles: { 1: { halign: 'right' } },
+    });
+  });
+
   // Expense detail grouped by category
   if (sortedCategories.length) {
     const detailY = (doc as any).lastAutoTable.finalY + 15;
     doc.setFontSize(16);
     doc.setTextColor(40, 40, 40);
-    doc.text(language === 'pt' ? 'Detalhamento por Categoria' : 'Breakdown by Category', 20, detailY);
+    doc.text(language === 'pt' ? 'Detalhamento de Despesas' : 'Expense Breakdown', 20, detailY);
     (doc as any).lastAutoTable.finalY = detailY;
   }
 
