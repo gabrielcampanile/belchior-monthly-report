@@ -36,7 +36,7 @@ const Index = () => {
 
   const handleExportPDF = () => {
     try {
-      generatePDFReport(summary, incomes, expenses, new Date().getMonth() + 1, new Date().getFullYear(), language);
+      generatePDFReport(summary, incomes, expenses, new Date().getMonth() + 1, new Date().getFullYear(), language, { getCategoryDisplayName, getIncomeTypeDisplayName });
       toast({ title: language === "pt" ? "Relatório Exportado" : "Report Exported", description: language === "pt" ? "Seu relatório mensal foi baixado como PDF." : "Your monthly report has been downloaded as PDF." });
     } catch {
       toast({ title: language === "pt" ? "Exportação Falhou" : "Export Failed", description: language === "pt" ? "Houve um erro ao gerar o PDF." : "There was an error generating the PDF.", variant: "destructive" });
